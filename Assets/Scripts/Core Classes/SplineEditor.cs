@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-[ExecuteInEditMode]
+[ExecuteAlways]
 public class SplineEditor : MonoBehaviour
 {
     public List<Transform> splinePoints = new();
@@ -21,6 +21,10 @@ public class SplineEditor : MonoBehaviour
     public float pillarFillerArea;
 
     private MeshFilter meshFilter;
+    private MeshRenderer Renderer;
+    private MeshCollider col;
+
+    public Material[] BridgeMats = new Material[2];
 
     float beginAngle;
     float endAngle;
@@ -29,6 +33,10 @@ public class SplineEditor : MonoBehaviour
     void Start()
     {
         meshFilter = GetComponent<MeshFilter>();
+        Renderer = GetComponent<MeshRenderer>();
+
+        if(Application.isPlaying)
+            GenerateSpline();
     }
 
     int Factorial(int n) 
@@ -89,6 +97,7 @@ public class SplineEditor : MonoBehaviour
         uv_scale = 1;
 
         GenerateSpline();
+        RenderSpline();
     }
 
     string alphabet = "abcdefghijklmnopqrstuvwxyz";
@@ -112,7 +121,7 @@ public class SplineEditor : MonoBehaviour
         print("Constant mesh update is set to " + realtimeMeshUpdate + "!");
     }
 
-    public float[] trTOta;
+    float[] trTOta;
     float curveLength;
     void GenerateTrToTa() 
     {
@@ -150,24 +159,24 @@ public class SplineEditor : MonoBehaviour
         }
     }
 
+    List<int> triangles = new();
+
+    Vector3[] vertexOuput;
+    Vector2[] texCoordOutput;
+
     [ContextMenu("EDITOR/Generate Spline")]
-    Mesh GenerateSpline() 
+    void GenerateSpline() 
     {
         GenerateTrToTa();
+        triangles = new();
 
         beginAngle = splinePoints[0 ].transform.rotation.eulerAngles.y * Mathf.Deg2Rad;
         endAngle   = splinePoints[^1].transform.rotation.eulerAngles.y * Mathf.Deg2Rad;
 
-        if (!meshFilter)
-            meshFilter = GetComponent<MeshFilter>();
-
-        Mesh output = new();
-
-        List<Vector3> vertices = new();
-        List<int> triangles = new();
-        List<Vector2> texCoord = new();
-
         Vector2 texCoordOffset = Vector2.zero;
+
+        List<Vector2> texCoord = new();
+        List<Vector3> vertices = new();
 
         // Vertices
         for (float i = 0; i < resolution; i++)
@@ -259,8 +268,8 @@ public class SplineEditor : MonoBehaviour
         triangles.Add(vertices.Count-1);
         triangles.Add(vertices.Count-2);
 
-        Vector3[] vertexOuput = new Vector3[vertices.Count * 2];
-        Vector2[] texCoordOutput = new Vector2[texCoord.Count * 2];
+        vertexOuput = new Vector3[vertices.Count * 2];
+        texCoordOutput = new Vector2[texCoord.Count * 2];
 
         //Duplicate vertices (for surface normals)
         vertices.CopyTo(vertexOuput, 0);
@@ -268,18 +277,50 @@ public class SplineEditor : MonoBehaviour
         texCoord.CopyTo(texCoordOutput, 0);
         texCoord.CopyTo(texCoordOutput, texCoord.Count);
 
+        col = (!col ? GetComponent<MeshCollider>() : col);
+        Mesh colMesh = new();
+
+        colMesh.vertices = vertexOuput;
+        colMesh.triangles = triangles.ToArray();
+
+        col.sharedMesh = colMesh;
+    }
+    void RenderSpline() 
+    {
+        Mesh output = new();
+
+        Mathf.Clamp(percentage_transparent, 0, 1);
+
+        float amountTrianglesOpaque = triangles.Count * (1 - percentage_transparent);
+        amountTrianglesOpaque = Mathf.Ceil(amountTrianglesOpaque / 3) * 3;
+
+        int[] trianglesOpaque = new int[(int)amountTrianglesOpaque];
+        int[] trianglesTransparent = new int[triangles.Count - (int)amountTrianglesOpaque];
+
+        triangles.CopyTo(0, trianglesOpaque, 0, trianglesOpaque.Length);
+        triangles.CopyTo(trianglesOpaque.Length, trianglesTransparent, 0, trianglesTransparent.Length);
+
         output.vertices = vertexOuput;
-        output.triangles = triangles.ToArray();
         output.uv = texCoordOutput;
+
+        output.subMeshCount = 2;
+        output.SetTriangles(trianglesOpaque, 0);
+        output.SetTriangles(trianglesTransparent, 1);
 
         output.RecalculateNormals();
         output.RecalculateTangents();
         output.Optimize();
 
-        meshFilter.mesh = output;
+        Renderer = (!Renderer ? GetComponent<MeshRenderer>() : Renderer);
+        meshFilter = (!meshFilter ? GetComponent<MeshFilter>() : meshFilter);
 
-        return output;
+        meshFilter.mesh = output;
+        Renderer.sharedMaterials = BridgeMats;
     }
+
+    [Range(0, 1)]
+    public float percentage_transparent = 0;
+    float prevPercentage_transparent;
 
     // Update is called once per frame
     void Update()
@@ -291,7 +332,11 @@ public class SplineEditor : MonoBehaviour
             if (!splinePoints[i])
                 splinePoints.RemoveAt(i);
 
-        if (realtimeMeshUpdate)
+        if (realtimeMeshUpdate && !Application.isPlaying)
             GenerateSpline();
+        if ((realtimeMeshUpdate && !Application.isPlaying) || (Application.isPlaying && percentage_transparent != prevPercentage_transparent))
+            RenderSpline();
+
+        prevPercentage_transparent = percentage_transparent;
     }
 }
