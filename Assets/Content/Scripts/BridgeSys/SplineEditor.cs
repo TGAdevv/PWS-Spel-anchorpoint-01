@@ -39,21 +39,6 @@ public class SplineEditor : MonoBehaviour
             GenerateSpline();
     }
 
-    int Factorial(int n) 
-    {
-        if (n <= 1)
-            return 1;
-        int result = n;
-        for (int i = 1; i < n; i++)
-            result *= i;
-        return result;
-    }
-    int nCr(int n, int r) 
-    {
-        // https://www.calculatorsoup.com/calculators/discretemathematics/combinations.php
-        return Factorial(n) / (Factorial(r) * Factorial(n - r));
-    }
-
     public Vector3 SamplePointInCurve(float t) 
     {
         // https://en.wikipedia.org/wiki/B%C3%A9zier_curve#Explicit_definition
@@ -62,7 +47,7 @@ public class SplineEditor : MonoBehaviour
         int n = splinePoints.Count - 1;
 
         for (int i = 0; i <= n; i++)
-            result += nCr(n, i) * Mathf.Pow((1-t), n-i) * Mathf.Pow(t, i) * (splinePoints[i].position - transform.position);
+            result += CustomMath.nCr(n, i) * Mathf.Pow((1-t), n-i) * Mathf.Pow(t, i) * (splinePoints[i].position - transform.position);
 
         return result;
     }
@@ -109,7 +94,7 @@ public class SplineEditor : MonoBehaviour
 
         newPoint.name = alphabet[splinePoints.Count - 2] + "";
         newPoint.transform.parent = transform;
-        newPoint.transform.position = .5f * (splinePoints[0].position + splinePoints[splinePoints.Count - 1].position);
+        newPoint.transform.position = .5f * (splinePoints[0].position + splinePoints[^1].position);
 
         splinePoints.Insert(splinePoints.Count - 1, newPoint.transform);
     }
