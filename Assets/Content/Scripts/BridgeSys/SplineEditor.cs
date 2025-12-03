@@ -6,10 +6,10 @@ public class SplineEditor : MonoBehaviour
 {
     public List<Transform> splinePoints = new();
     public int resolution;
-    public float d;
-    public float bridgeWidth;
-    public float bridgeHeight;
-    public float uv_scale;
+    public float d = .001f;
+    public float bridgeWidth = 2;
+    public float bridgeHeight = 3;
+    public float uv_scale = .1f;
 
     [Range(0, .5f)]
     public float AngleFallof;
@@ -18,7 +18,7 @@ public class SplineEditor : MonoBehaviour
     public int pillarCount;
 
     [Range(0, .5f)]
-    public float pillarFillerArea;
+    public float pillarFillerArea = .3f;
 
     private MeshFilter meshFilter;
     private MeshRenderer Renderer;
@@ -35,8 +35,11 @@ public class SplineEditor : MonoBehaviour
         meshFilter = GetComponent<MeshFilter>();
         Renderer = GetComponent<MeshRenderer>();
 
-        if(Application.isPlaying)
+        if (Application.isPlaying)
+        {
             GenerateSpline();
+            RenderSpline();
+        }
     }
 
     public Vector3 SamplePointInCurve(float t) 
@@ -270,7 +273,7 @@ public class SplineEditor : MonoBehaviour
 
         col.sharedMesh = colMesh;
     }
-    void RenderSpline() 
+    public void RenderSpline() 
     {
         Mesh output = new();
 

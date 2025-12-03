@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class OrbitalCamera : MonoBehaviour
 {
@@ -36,7 +38,16 @@ public class OrbitalCamera : MonoBehaviour
         focusPoint.transform.rotation = Quaternion.Euler(curAngle);
 
         if (Input.GetMouseButtonDown(0) && !Physics.Raycast(cam.ScreenPointToRay(Input.mousePosition), 1000, bridgeMask) && !Physics.Raycast(cam.ScreenPointToRay(Input.mousePosition), 1000, LayerMask.GetMask("UI")))
-            moveCamera = true;
+        {
+            EventSystem currentEventSys = EventSystem.current;
+            PointerEventData eventData = new(currentEventSys);
+            eventData.position = Input.mousePosition;
+            List<RaycastResult> results = new();
+            currentEventSys.RaycastAll(eventData, results);
+            if (results.Count == 0)
+                moveCamera = true;
+        }
+            
         if (moveCamera) 
         {
             Vector2 deltaMouse = Input.mousePositionDelta;

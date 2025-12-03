@@ -239,10 +239,10 @@ public class ManageIslandConnections : MonoBehaviour
             return;
 
         EventSystem currentEventSys = EventSystem.current;
-        PointerEventData eventData = new(EventSystem.current);
+        PointerEventData eventData = new(currentEventSys);
         eventData.position = Input.mousePosition;
         List<RaycastResult> results = new();
-        EventSystem.current.RaycastAll(eventData, results);
+        currentEventSys.RaycastAll(eventData, results);
         foreach (var result in results)
         {
             if (result.gameObject.CompareTag("Connection")) 

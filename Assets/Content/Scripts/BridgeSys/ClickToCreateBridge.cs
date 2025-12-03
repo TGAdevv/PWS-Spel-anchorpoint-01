@@ -1,5 +1,7 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.EventSystems;
+using System.Collections.Generic;
 
 public class ClickToCreateBridge : MonoBehaviour
 {
@@ -40,7 +42,16 @@ public class ClickToCreateBridge : MonoBehaviour
     {
         if (targetBridgeActive == 0 && Currency.m_Blocks < price)
             return;
-        Currency.m_Blocks -= price;
+
+        EventSystem currentEventSys = EventSystem.current;
+        PointerEventData eventData = new(currentEventSys);
+        eventData.position = Input.mousePosition;
+        List<RaycastResult> results = new();
+        currentEventSys.RaycastAll(eventData, results);
+        if (results.Count > 0)
+            return;
+
+            Currency.m_Blocks -= price;
 
         if (targetBridgeActive == 1)
             Currency.m_Blocks += price * 2;

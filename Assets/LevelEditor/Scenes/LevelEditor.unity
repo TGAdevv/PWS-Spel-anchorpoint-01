@@ -3666,7 +3666,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DragIsland: 0
   islandPrefab: {fileID: 7428582695177614278, guid: 42bf3aeb331df7147bf7d7ae1fa8e0af, type: 3}
-  UnitSize: 30
+  UnitSize: 10
   CurveRes: 30
 --- !u!1 &1492977217
 GameObject:
