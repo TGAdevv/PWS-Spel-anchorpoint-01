@@ -90,7 +90,7 @@ public class Graph
             m_Connections.Add((edges != null) ? edges[i] : new Edges());
         }
     }
-    public void AddEdge(int beginVert, int endVert, int weight = 1, Vector2[] bezierPoints = null)
+    public void AddEdge(int beginVert, int endVert, int weight = 1, Vector3[] bezierPoints = null)
     {
         m_Connections[beginVert].edges.Add(new Edge(endVert, weight, bezierPoints));
     }
@@ -120,7 +120,8 @@ public class Graph
                 for (int k = 0; k < curEdge.bezier_points.Length; k++)
                 {
                     result += curEdge.bezier_points[k].x + ",";
-                    result += curEdge.bezier_points[k].y;
+                    result += curEdge.bezier_points[k].y + ",";
+                    result += curEdge.bezier_points[k].z;
                     if (k < curEdge.bezier_points.Length - 1)
                         result += ",";
                 }
@@ -173,14 +174,14 @@ public class Graph
         // ------------------------------
         public int vert;
         public int weight;
-        public Vector2[] bezier_points;
+        public Vector3[] bezier_points;
         // ------------------------------
 
 
         // ------------------------------
         //  Edge->CONSTRUCTORS
         // ------------------------------
-        public Edge(int c_Vert, int c_Weight = 1, Vector2[] c_BezierPonts = null)
+        public Edge(int c_Vert, int c_Weight = 1, Vector3[] c_BezierPonts = null)
         {
             vert = c_Vert;
             weight = c_Weight;

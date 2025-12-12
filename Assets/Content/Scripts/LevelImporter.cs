@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class LevelImporter : MonoBehaviour
 {
-    [SerializeField] string[] levels;
+    public string[] levels;
 
     public Transform IslandsParent;
     public Transform BridgesParent;
@@ -11,42 +11,65 @@ public class LevelImporter : MonoBehaviour
     public Material[] BridgeMats = new Material[2];
 
     List<Transform> Islands = new();
-    List<SplineEditor> Bridges = new();
+    public List<SplineEditor> Bridges = new();
 
     public float LevelScaleMod = 3;
     public float DistancePerPillar;
     public float DistancePerSample;
 
+    float relativeLevelScaleMod = 0;
+    Vector2 screenRes;
+
     public GameObject[] IslandTiles;
     public AnchorToPosition anchorToPosition;
 
+    Vector3 mapCenter = new(0,0,0);
+
+    public Transform CameraCanvas;
+    public GameObject PriceUIPrefab;
+
+    [Header("FOR EDITOR LEAVE NULL IN GAME SCENE")]
+    public GameObject axisPrefab;
+
     private void Start()
     {
-        ImportLevel(0);
+        if (!axisPrefab)
+            ImportLevel(0);
     }
 
     void CreateIsland(Vector2 pos, Vector2Int size) 
     {
-        print("pos: " + pos.ToString());
-
         GameObject island = new("island " + pos.ToString());
-        island.transform.position = anchorToPosition._AnchorToPosition(pos) * LevelScaleMod;
+        island.transform.position = new Vector3(pos.x, 0, pos.y) * relativeLevelScaleMod;
         island.transform.parent = IslandsParent;
+
+        mapCenter += island.transform.position;
+
+        float unitSize = .3f * (screenRes.x / screenRes.y) * relativeLevelScaleMod;
 
         for (int i = 0; i < size.x; i++)
         {
             for (int j = 0; j < size.y; j++)
-            {
-                //TEMP! Should not be 0 (but the tile actually needed)
-                GameObject newTile = Instantiate(IslandTiles[0], island.transform.position + new Vector3(i, 0, j) * LevelScaleMod, Quaternion.identity, island.transform);
-                newTile.transform.localScale = Vector3.one * LevelScaleMod;
+            { 
+                GameObject newTile = Instantiate(
+                    //TEMP! Should not be 0 (but the tile actually needed)
+                    IslandTiles[Mathf.RoundToInt(Random.Range(0.0f, 1.0f))], 
+                    island.transform.position + new Vector3(i - (size.x - 1) * .5f, 0, j - (size.y - 1) * .5f) * unitSize, 
+                    Quaternion.identity, 
+                    island.transform);
+                newTile.transform.localScale *= unitSize;
             }
         }
+
+        Islands.Add(island.transform);
     }
     void CreateBridge(Vector3[] splinePoints, float weight, Vector2Int index)
     {
+        float unitSize = .3f * (screenRes.x / screenRes.y) * relativeLevelScaleMod;
+
         GameObject newBridge = new("Bridge " + index.x + ", " + index.y);
         newBridge.transform.parent = BridgesParent;
+        newBridge.layer = LayerMask.NameToLayer("Bridge");
         newBridge.AddComponent<MeshCollider>();
         newBridge.AddComponent<MeshFilter>();
         newBridge.AddComponent<MeshRenderer>();
@@ -57,6 +80,10 @@ public class LevelImporter : MonoBehaviour
         newSpline.BridgeMats  = BridgeMats;
         newSpline.resolution  = Mathf.CeilToInt(splineDistance  / DistancePerSample);
         newSpline.pillarCount = Mathf.RoundToInt(splineDistance / DistancePerPillar);
+        newSpline.bridgeWidth = unitSize * .15f;
+        newSpline.bridgeHeight = unitSize * .25f;
+        if (axisPrefab)
+            newSpline.percentage_transparent = 0;
 
         List<Transform> splineTransforms = new();
 
@@ -66,14 +93,34 @@ public class LevelImporter : MonoBehaviour
             newSplinePoint.transform.position = splinePoints[i];
             newSplinePoint.transform.parent   = newBridge.transform;
             splineTransforms.Add(newSplinePoint.transform);
+
+            if (i != 0 && i != splinePoints.Length-1 && axisPrefab)
+            {
+                GameObject AxisOBJ = Instantiate(axisPrefab, newSplinePoint.transform);
+                AxisOBJ.GetComponent<AxisScript>().host = newSpline;
+            }
         }
 
         newSpline.splinePoints = splineTransforms;
+
+        if (!axisPrefab)
+        {
+            ClickToCreateBridge clickToCreateBridge = newBridge.AddComponent<ClickToCreateBridge>();
+            clickToCreateBridge.price = (uint)weight;
+            clickToCreateBridge.MenuPricePrefab = PriceUIPrefab;
+            clickToCreateBridge.CameraCanvas = CameraCanvas;
+        }
+
+        Bridges.Add(newSpline);
     }
 
     public void ImportLevel(int levelID)
     {
+        transform.position = Vector3.zero;
+
         //First wipe everything from the current scene
+        for (int i = 0; i < CameraCanvas.childCount; i++)
+            Destroy(CameraCanvas.GetChild(i).gameObject);
         foreach (var island in Islands)
             Destroy(island.gameObject);
         foreach (var bridge in Bridges)
@@ -86,9 +133,17 @@ public class LevelImporter : MonoBehaviour
         string[] islands = level.Split("_")[0].Split(";");
         string[] Allconnections = level.Split("_")[1].Split("/");
 
+        string[] screenResComponents = level.Split("_")[2].Split(",");
+        screenRes = new(int.Parse(screenResComponents[0]), int.Parse(screenResComponents[1]));
+
+        relativeLevelScaleMod = LevelScaleMod * (1000 / screenRes.x);
+
         for (int i = 0; i < islands.Length; i++)
         {
             string[] islandParams = islands[i].Split(",");
+
+            if (islandParams.Length < 4)
+                continue;
 
             Vector2 pos     = new(float.Parse(islandParams[0]), float.Parse(islandParams[1]));
             Vector2Int size = new(int.Parse(islandParams[2]),   int.Parse(islandParams[3]));
@@ -106,16 +161,16 @@ public class LevelImporter : MonoBehaviour
                 if (connectionParams.Length < 6)
                     continue;
 
-                Vector3[] splinePoints = new Vector3[Mathf.FloorToInt((connectionParams.Length - 2)*.5f)];
+                Vector3[] splinePoints = new Vector3[Mathf.FloorToInt((connectionParams.Length - 2)/3f)];
                 for (int k = 0; k < splinePoints.Length; k++)
-                {
-                    splinePoints[k] = new(float.Parse(connectionParams[k * 2 + 2]), (k == 0 || k == splinePoints.Length-1) ? 0 : Random.Range(.1f, .5f), float.Parse(connectionParams[k * 2 + 3]));
-                    splinePoints[k] *= LevelScaleMod;
-                }
+                    splinePoints[k]  = new(float.Parse(connectionParams[k * 3 + 2]), float.Parse(connectionParams[k * 3 + 3]), float.Parse(connectionParams[k * 3 + 4]));
                 float weight = float.Parse(connectionParams[0]);
 
                 CreateBridge(splinePoints, weight, new(i, j));
             }
         }
+
+        if (!axisPrefab)
+            transform.position = -mapCenter / islands.Length;
     }
 }

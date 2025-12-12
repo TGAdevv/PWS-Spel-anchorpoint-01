@@ -7,8 +7,8 @@ public class SplineEditor : MonoBehaviour
     public List<Transform> splinePoints = new();
     public int resolution;
     public float d = .001f;
-    public float bridgeWidth = 2;
-    public float bridgeHeight = 3;
+    public float bridgeWidth = .5f;
+    public float bridgeHeight = 2;
     public float uv_scale = .1f;
 
     [Range(0, .5f)]
@@ -56,38 +56,6 @@ public class SplineEditor : MonoBehaviour
     }
 
     bool realtimeMeshUpdate = false;
-
-    [ContextMenu("EDITOR/Create basic setup")]
-    void CreateBasicSetup() 
-    {
-        meshFilter = gameObject.AddComponent<MeshFilter>();
-        MeshRenderer renderer = gameObject.AddComponent<MeshRenderer>();
-        renderer.material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-
-        GameObject[] splinepoints = new GameObject[3] { new(), new(), new() };
-        string[] splinenames = new string[3] { "begin", "end", "a" };
-        Vector3[] standardsplinepositions = new Vector3[3] { Vector3.zero, Vector3.right*16, Vector3.right * 18 };
-
-        for (int i = 0; i < 3; i++)
-        {
-            splinepoints[i].name = splinenames[i];
-            splinepoints[i].transform.parent = transform;
-            splinepoints[i].transform.position = standardsplinepositions[i];
-        }
-
-        splinePoints = new List<Transform> { splinepoints[0].transform, splinepoints[2].transform, splinepoints[1].transform };
-        resolution = 50;
-        d = .001f;
-        bridgeWidth = 2;
-        bridgeHeight = 3.2f;
-        pillarCount = 6;
-        pillarFillerArea = .4f;
-        uv_scale = 1;
-
-        GenerateSpline();
-        RenderSpline();
-    }
-
     string alphabet = "abcdefghijklmnopqrstuvwxyz";
 
     [ContextMenu("EDITOR/Add spline point", false, 2)]
@@ -153,7 +121,7 @@ public class SplineEditor : MonoBehaviour
     Vector2[] texCoordOutput;
 
     [ContextMenu("EDITOR/Generate Spline")]
-    void GenerateSpline() 
+    public void GenerateSpline() 
     {
         GenerateTrToTa();
         triangles = new();
@@ -273,6 +241,8 @@ public class SplineEditor : MonoBehaviour
 
         col.sharedMesh = colMesh;
     }
+
+    [ContextMenu("EDITOR/Render Spline")]
     public void RenderSpline() 
     {
         Mesh output = new();

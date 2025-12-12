@@ -12,8 +12,8 @@ public class ClickToCreateBridge : MonoBehaviour
 
     public uint price;
 
-    [SerializeField] Transform CameraCanvas;
-    [SerializeField] GameObject MenuPricePrefab;
+    public Transform CameraCanvas;
+    public GameObject MenuPricePrefab;
 
     RectTransform rect;
     TMP_Text priceTXT;

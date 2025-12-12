@@ -38,6 +38,9 @@ public class IslandEditor : MonoBehaviour
     [Range(10, 50)]
     [SerializeField] float UnitSize;
 
+    public Canvas canvas;
+    public LevelImporter levelImporter;
+
     void ClickedButton(int buttonID) 
     {
         CurrentIsland = buttonID;
@@ -48,21 +51,21 @@ public class IslandEditor : MonoBehaviour
         DragIsland = false;
     }
 
-    Vector2 PrevMousePos = new();
+    Vector3 PrevMousePos = new();
     public int CurveRes = 30;
 
     private void Update()
     {
         if (DragIsland)
         {
-            Vector2 dPos = new((Input.mousePosition.x - PrevMousePos.x) / Screen.width, (Input.mousePosition.y - PrevMousePos.y) / Screen.height);
-            IslandScripts[CurrentIsland].rect.anchorMax += dPos;
-            IslandScripts[CurrentIsland].rect.anchorMin += dPos;
+            if (CurrentIsland > IslandScripts.Count - 1)
+                return;
+
+            Vector3 dPos = Input.mousePosition - PrevMousePos;
+            IslandScripts[CurrentIsland].rect.localPosition += dPos * (1000 / (float)Display.main.renderingWidth);
         }
         PrevMousePos = Input.mousePosition;
     }
-
-
 
     public void CreateIsland()
     {
@@ -119,39 +122,80 @@ public class IslandEditor : MonoBehaviour
             IslandScripts[i].id--;
     }
 
+    public void EventExportLevel(int splinePointsHaveYValue)
+    {
+        ExportLevel(splinePointsHaveYValue == 1);
+    }
+
     // Turns everything into a graph
-    public void ExportLevel() 
+    public string ExportLevel(bool splinePointsHaveYValue, bool copyToClipboard = true) 
     {
         Vector2[] islandPositions = new Vector2[IslandScripts.Count];
         Vector2Int[] islandSizes = new Vector2Int[islandPositions.Length];
         for (int i = 0; i < islandPositions.Length; i++)
         {
-            islandPositions[i] = IslandScripts[i].rect.anchorMax;
+            islandPositions[i] = IslandScripts[i].rect.position;
             islandSizes[i]     = new(IslandScripts[i].nWidth, IslandScripts[i].nHeight);
         }
 
         Graph result = new(islandPositions, islandSizes);
 
+        int curIndex = 0;
         for (int i = 0; i < IslandScripts.Count; i++)
         {
             for (int j = 0; j < IslandScripts[i].Connections.Count; j++)
             {
                 Connection curConnection = IslandScripts[i].Connections[j];
-                Vector2[] bezierPoints = IslandScripts[i].CalculateSplinePoints(curConnection.begin.position, curConnection.end.position, curConnection.end.parent.parent.parent.GetComponent<RectTransform>());
+                Vector3[] bezierPoints;
+                if (!splinePointsHaveYValue)
+                {
+                    Vector2[] bezierPoints2D = IslandScripts[i].CalculateSplinePoints(curConnection.begin.position, curConnection.end.position, curConnection.end.parent.parent.parent.GetComponent<RectTransform>());
+                    bezierPoints = new Vector3[bezierPoints2D.Length];
+
+                    for (int k = 0; k < bezierPoints2D.Length; k++)
+                    {
+                        bezierPoints[k] = new(bezierPoints2D[k].x, (k == 0 || k == bezierPoints.Length-1) ? 0 : .15f, bezierPoints2D[k].y);
+                    }
+                }
+                else
+                {
+                    if (curIndex >= levelImporter.Bridges.Count)
+                    {
+                        Debug.LogWarning("Array length exceeded: " + curIndex + " vs " + (levelImporter.Bridges.Count - 1));
+                        continue;
+                    }
+
+                    Transform[] splineTransforms = levelImporter.Bridges[curIndex].splinePoints.ToArray();
+                    bezierPoints = new Vector3[splineTransforms.Length];
+                    for (int k = 0; k < splineTransforms.Length; k++)
+                    {
+                        bezierPoints[k] = splineTransforms[k].position;
+                    }
+                }
                 result.AddEdge(i, curConnection.end.parent.parent.parent.GetComponent<ManageIslandConnections>().id, curConnection.weight, bezierPoints);
+
+                curIndex++;
             }
         }
 
         print(result.ToString());
-        string Result_TXT = result.ExportGraph();// + ";" + JsonUtility.ToJson(result.m_Connections);
+        string Result_TXT = result.ExportGraph();
 
-        TextEditor te = new();
-        te.text = Result_TXT;
-        te.SelectAll();
-        te.Copy();
+        //                              Important for converting to worldspace
+        Result_TXT += "_" + Display.main.renderingWidth + "," + Display.main.renderingHeight;
+
+        if (copyToClipboard)
+        {
+            TextEditor te = new();
+            te.text = Result_TXT;
+            te.SelectAll();
+            te.Copy();
+        }
+
+        return Result_TXT;
     }
 
-    RectTransform findConnectionRect(ManageIslandConnections islandScript, Vector2 pos) 
+    RectTransform FindConnectionRect(ManageIslandConnections islandScript, Vector2 pos) 
     {
         RectTransform result = null;
         float closestDistance = float.PositiveInfinity;
@@ -174,8 +218,6 @@ public class IslandEditor : MonoBehaviour
                 }
             }
         }
-
-        print("Result is " + result.position.ToString() + " with distance " + closestDistance);
         return result;
     }
 
@@ -203,40 +245,27 @@ public class IslandEditor : MonoBehaviour
             CreateIsland();
             IslandScripts[^1].DefineStartVariables();
             IslandScripts[^1].UpdateConnections(int.Parse(islandParams[2]), int.Parse(islandParams[3]));
-            IslandScripts[^1].rect.anchorMax = new Vector2(float.Parse(islandParams[0]), float.Parse(islandParams[1]));
-            IslandScripts[^1].rect.anchorMin = IslandScripts[^1].rect.anchorMax;
+            IslandScripts[^1].rect.position = new Vector2(float.Parse(islandParams[0]), float.Parse(islandParams[1]));
         }
 
         for (int i = 0; i < Allconnections.Length; i++)
         {
             string[] connections = Allconnections[i].Split(";");
-            print("Connections length: " + connections.Length);
 
             for (int j = 0; j < connections.Length; j++)
             {
                 string[] connectionParams = connections[j].Split(",");
-                print(connections[j]);
                 if (connectionParams.Length < 6)
                     continue;
 
                 RectTransform begin, end;
                 LineRenderer lineRenderer;
 
-                print(connectionParams[2]);
-                print(connectionParams[3]);
+                Vector2 beginPosition = new(float.Parse(connectionParams[2]), float.Parse(connectionParams[3]));
+                Vector2 endPosition   = new(float.Parse(connectionParams[^2]),float.Parse(connectionParams[^1]));
 
-                Vector2 beginPosition = new Vector2(float.Parse(connectionParams[2]), float.Parse(connectionParams[3]));
-
-                float r;
-                print(connectionParams[^2] + "; " + float.TryParse(connectionParams[^2], out r));
-                print(connectionParams[^1] + "; " + float.TryParse(connectionParams[^1], out r));
-
-                Vector2 endPosition   = new Vector2(float.Parse(connectionParams[^2]),float.Parse(connectionParams[^1]));
-
-                print("Connecction Param parse succes");
-
-                begin = findConnectionRect(IslandScripts[i], beginPosition);
-                end   = findConnectionRect(IslandScripts[int.Parse(connectionParams[1])], endPosition);
+                begin = FindConnectionRect(IslandScripts[i], beginPosition);
+                end   = FindConnectionRect(IslandScripts[int.Parse(connectionParams[1])], endPosition);
 
                 lineRenderer = IslandScripts[i].AddLineRenderer(begin.parent.GetComponent<RectTransform>());
                 lineRenderer.positionCount = CurveRes;

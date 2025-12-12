@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -20,12 +21,13 @@ public class ManageIslandConnections : MonoBehaviour
     public List<RectTransform> ConnectionsTop   = new(), ConnectionsBottom = new();
     public List<RectTransform> ConnectionsRight = new(), ConnectionsLeft   = new();
 
-    Material lineRenderMaterial;
+    [SerializeField] Material lineRenderMaterial;
 
     public LineRenderer currentLineRenderer;
     Camera cam;
 
     public List<Connection> Connections = new();
+    List<TMP_Text> WeightTextOBJS = new();
 
     Slider CurveSize;
 
@@ -43,7 +45,6 @@ public class ManageIslandConnections : MonoBehaviour
         ConnectionsRight.Add(connectionRight);
         ConnectionsLeft.Add(connectionLeft);
 
-        lineRenderMaterial = new(Shader.Find("Universal Render Pipeline/Unlit"));
         cam = Camera.main;
 
         CurveSize = GameObject.FindGameObjectWithTag("CurveSize").GetComponent<Slider>();
@@ -71,9 +72,8 @@ public class ManageIslandConnections : MonoBehaviour
             else
                 ConnectionSelected = -1;
 
-
         if (ConnectionSelected != -1)
-            Connections[ConnectionSelected].begin.GetComponent<TMPro.TMP_Text>().text = Connections[ConnectionSelected].weight.ToString();
+            Connections[ConnectionSelected].begin.GetComponent<TMP_Text>().text = Connections[ConnectionSelected].weight.ToString();
 
         if (Input.GetMouseButton(0) || Input.GetMouseButtonUp(0))
             RefreshLineRenderers();
@@ -86,12 +86,12 @@ public class ManageIslandConnections : MonoBehaviour
             var connection = Connections[i];
             if (connection.end == null)
             {
-                connection.begin.GetComponent<TMPro.TMP_Text>().text = "";
+                connection.begin.GetComponent<TMP_Text>().text = "";
                 Destroy(connection.lineRenderer);
                 Connections.RemoveAt(i);
                 continue;
             }
-            connection.begin.GetComponent<TMPro.TMP_Text>().text = connection.weight.ToString();
+            connection.begin.GetComponent<TMP_Text>().text = connection.weight.ToString();
             connection.lineRenderer.SetPositions(GenerateBezierConnection(connection.begin.position, connection.end.position, connection.end.parent.parent.parent.GetComponent<RectTransform>(), CurveRes));
         }
     }
@@ -102,7 +102,7 @@ public class ManageIslandConnections : MonoBehaviour
             if (Transform.TryGetComponent(out T tempComp)) Destroy(tempComp);
     }
 
-    Vector2 roundVector2(Vector2 vec) => new(Mathf.Round(vec.x), Mathf.Round(vec.y));
+    Vector2 RoundVector2(Vector2 vec) => new(Mathf.Round(vec.x), Mathf.Round(vec.y));
 
     public Vector2 SamplePointInCurve2D(float t, Vector2[] splinePoints)
     {
@@ -118,8 +118,22 @@ public class ManageIslandConnections : MonoBehaviour
     }
     public Vector2[] CalculateSplinePoints(Vector2 beginPoint, Vector2 endPoint, RectTransform endIslandRect)
     {
-        Vector2 directionBeg = roundVector2(((Vector2)rect.position - beginPoint).normalized / Mathf.Sqrt(2)) * Vector2.Distance(beginPoint, endPoint);
-        Vector2 directionEnd = roundVector2(((Vector2)endIslandRect.position - endPoint).normalized / Mathf.Sqrt(2)) * Vector2.Distance(beginPoint, endPoint);
+        ManageIslandConnections endIslandScript = endIslandRect.GetComponent<ManageIslandConnections>();
+        float CurveScaleMod = Vector2.Distance(beginPoint, endPoint);
+
+        Vector2 directionBeg = (Vector2)rect.position - beginPoint;
+        directionBeg = new(directionBeg.x / nWidth, directionBeg.y / nHeight);
+        if (Mathf.Abs(directionBeg.x) > Mathf.Abs(directionBeg.y))
+            directionBeg = (directionBeg * Vector2.right).normalized * CurveScaleMod;
+        else
+            directionBeg = (directionBeg * Vector2.up).normalized * CurveScaleMod;
+
+        Vector2 directionEnd = (Vector2)endIslandRect.position - endPoint;
+        directionEnd = new(directionEnd.x / endIslandScript.nWidth, directionEnd.y / endIslandScript.nHeight);
+        if (Mathf.Abs(directionEnd.x) > Mathf.Abs(directionEnd.y))
+            directionEnd = (directionEnd * Vector2.right).normalized * CurveScaleMod;
+        else
+            directionEnd = (directionEnd * Vector2.up).normalized * CurveScaleMod;
 
         return new Vector2[4] { beginPoint, beginPoint - directionBeg * CurveSize.value, endPoint - directionEnd * CurveSize.value, endPoint };
     }
@@ -151,8 +165,11 @@ public class ManageIslandConnections : MonoBehaviour
                 RectTransform newConnectionTop    = Instantiate(ConnectionsTop[0],    connectionTop.parent);
                 RectTransform newConnectionBottom = Instantiate(ConnectionsBottom[0], connectionBottom.parent);
 
-                newConnectionTop.localPosition    += Vector3.right * UnitSize * ConnectionsTop.Count;
-                newConnectionBottom.localPosition += Vector3.right * UnitSize * ConnectionsTop.Count;
+                newConnectionTop.localPosition    += ConnectionsTop.Count * UnitSize * Vector3.right;
+                newConnectionBottom.localPosition += ConnectionsTop.Count * UnitSize * Vector3.right;
+
+                newConnectionTop.GetComponentInChildren<TMP_Text>().text = "";
+                newConnectionBottom.GetComponentInChildren<TMP_Text>().text = "";
 
                 DestroyComponents<LineRenderer>(new RectTransform[2] { newConnectionTop, newConnectionBottom});
 
@@ -181,8 +198,11 @@ public class ManageIslandConnections : MonoBehaviour
                 RectTransform newConnectionRight = Instantiate(ConnectionsRight[0], connectionRight.parent);
                 RectTransform newConnectionLeft  = Instantiate(ConnectionsLeft[0],  connectionLeft.parent);
 
-                newConnectionRight.localPosition += Vector3.up * UnitSize * ConnectionsLeft.Count;
-                newConnectionLeft.localPosition  += Vector3.up * UnitSize * ConnectionsLeft.Count;
+                newConnectionRight.localPosition += ConnectionsLeft.Count * UnitSize * Vector3.up;
+                newConnectionLeft.localPosition  += ConnectionsLeft.Count * UnitSize * Vector3.up;
+
+                newConnectionRight.GetComponentInChildren<TMP_Text>().text = "";
+                newConnectionLeft.GetComponentInChildren<TMP_Text>().text = "";
 
                 DestroyComponents<LineRenderer>(new RectTransform[2] { newConnectionRight, newConnectionLeft });
 
@@ -214,6 +234,8 @@ public class ManageIslandConnections : MonoBehaviour
         LineRenderer result = connection.gameObject.AddComponent<LineRenderer>();
         result.widthMultiplier = .05f;
         result.materials = new Material[1] { lineRenderMaterial };
+        result.startColor = Color.white;
+        result.endColor = Color.gray;
         return result;
     }
     public void ClickedConnection(RectTransform connection)
