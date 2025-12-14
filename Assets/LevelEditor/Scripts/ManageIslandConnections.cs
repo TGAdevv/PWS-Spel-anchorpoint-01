@@ -75,7 +75,7 @@ public class ManageIslandConnections : MonoBehaviour
         if (ConnectionSelected != -1)
             Connections[ConnectionSelected].begin.GetComponent<TMP_Text>().text = Connections[ConnectionSelected].weight.ToString();
 
-        if (Input.GetMouseButton(0) || Input.GetMouseButtonUp(0))
+        if (Input.GetMouseButton(0) || Input.GetMouseButtonUp(0) || Time.frameCount % 5 == 0)
             RefreshLineRenderers();
     }
 
@@ -84,11 +84,19 @@ public class ManageIslandConnections : MonoBehaviour
         for (int i = Connections.Count-1; i >= 0; i--)
         {
             var connection = Connections[i];
+            if (connection.begin == null)
+            {
+                Destroy(connection.lineRenderer);
+                Connections.RemoveAt(i);
+                ConnectionSelected = -1;
+                continue;
+            }
             if (connection.end == null)
             {
                 connection.begin.GetComponent<TMP_Text>().text = "";
                 Destroy(connection.lineRenderer);
                 Connections.RemoveAt(i);
+                ConnectionSelected = -1;
                 continue;
             }
             connection.begin.GetComponent<TMP_Text>().text = connection.weight.ToString();

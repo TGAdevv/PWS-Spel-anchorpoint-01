@@ -63,11 +63,17 @@ public class LevelImporter : MonoBehaviour
 
         Islands.Add(island.transform);
     }
-    void CreateBridge(Vector3[] splinePoints, float weight, Vector2Int index)
+    void CreateBridge(Vector3[] splinePoints, float weight, Vector2Int index, float[] weights = null)
     {
         float unitSize = .3f * (screenRes.x / screenRes.y) * relativeLevelScaleMod;
 
-        GameObject newBridge = new("Bridge " + index.x + ", " + index.y);
+        string weightOptionsTXT = "";
+        foreach (var item in weights)
+        {
+            weightOptionsTXT += item + ", ";
+        }
+
+        GameObject newBridge = new("Bridge " + index.x + ", " + index.y + ((weights.Length > 0) ? (" Weight options are: " + weightOptionsTXT) : ""));
         newBridge.transform.parent = BridgesParent;
         newBridge.layer = LayerMask.NameToLayer("Bridge");
         newBridge.AddComponent<MeshCollider>();
@@ -114,7 +120,7 @@ public class LevelImporter : MonoBehaviour
         Bridges.Add(newSpline);
     }
 
-    public void ImportLevel(int levelID)
+    public void ImportLevel(int levelID, bool PreviewMode=false)
     {
         transform.position = Vector3.zero;
 
@@ -163,10 +169,20 @@ public class LevelImporter : MonoBehaviour
 
                 Vector3[] splinePoints = new Vector3[Mathf.FloorToInt((connectionParams.Length - 2)/3f)];
                 for (int k = 0; k < splinePoints.Length; k++)
-                    splinePoints[k]  = new(float.Parse(connectionParams[k * 3 + 2]), float.Parse(connectionParams[k * 3 + 3]), float.Parse(connectionParams[k * 3 + 4]));
-                float weight = float.Parse(connectionParams[0]);
+                    splinePoints[k]  = new Vector3(float.Parse(connectionParams[k * 3 + 2]), float.Parse(connectionParams[k * 3 + 3]), float.Parse(connectionParams[k * 3 + 4])) * (PreviewMode ? relativeLevelScaleMod : 1);
+                float weight = 1;
+                float[] weights = new float[0];
+                if (connectionParams[0].Contains("?"))
+                {
+                    string[] weightsText = connectionParams[0].Split("?");
+                    weights = new float[weightsText.Length];
+                    for (int k = 0; k < weightsText.Length; k++)
+                        weights[k] = float.Parse(weightsText[k]);
+                }
+                else
+                    weight = float.Parse(connectionParams[0]);
 
-                CreateBridge(splinePoints, weight, new(i, j));
+                CreateBridge(splinePoints, weight, new(i, j), weights);
             }
         }
 

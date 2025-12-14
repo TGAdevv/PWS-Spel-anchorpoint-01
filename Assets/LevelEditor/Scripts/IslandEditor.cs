@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -11,12 +12,21 @@ public class Connection
     public LineRenderer lineRenderer;
     public int weight;
 
-    public Connection(RectTransform _begin, RectTransform _end, LineRenderer _lineRenderer, int _weight)
+    //Leave empty to disable variable weight
+    public List<int> weightOptions;
+
+    public Connection(RectTransform _begin, RectTransform _end, LineRenderer _lineRenderer, int _weight, int[] _weights = null)
     {
         begin = _begin;
         end = _end;
         lineRenderer = _lineRenderer;
         weight = _weight;
+        if (_weights == null)
+            weightOptions = new();
+        else if (_weights.Length > 0)
+            weightOptions = new List<int>(_weights);
+        else
+            weightOptions = new();
     }
 
     public override bool Equals(object obj) => base.Equals(obj);
@@ -25,7 +35,7 @@ public class Connection
 
 public class IslandEditor : MonoBehaviour
 {
-    List<ManageIslandConnections> IslandScripts = new();
+    public List<ManageIslandConnections> IslandScripts = new();
 
     int CurrentIsland;
     public bool DragIsland;
@@ -46,13 +56,20 @@ public class IslandEditor : MonoBehaviour
         CurrentIsland = buttonID;
         DragIsland = true;
     }
-    void ReleaseButton(int buttonID)
+    void ReleaseButton()
     {
         DragIsland = false;
     }
 
     Vector3 PrevMousePos = new();
     public int CurveRes = 30;
+
+    Color defaultIslandColor;
+
+    private void Start()
+    {
+        defaultIslandColor = new(0.8396226f, 0.8396226f, 0.6930847f);
+    }
 
     private void Update()
     {
@@ -72,46 +89,84 @@ public class IslandEditor : MonoBehaviour
         GameObject prefab = Instantiate(islandPrefab, GetComponent<RectTransform>());
         IslandScripts.Add(prefab.GetComponent<ManageIslandConnections>());
 
-        int buttonID = IslandScripts.Count - 1;
-        IslandScripts[^1].id = buttonID;
+        int _id = IslandScripts.Count - 1;
+        IslandScripts[^1].id = _id;
         IslandScripts[^1].hostScript = this;
 
         EventTrigger buttonEvents = IslandScripts[^1].gameObject.AddComponent<EventTrigger>();
 
         EventTrigger.Entry buttonDown = new() { eventID = EventTriggerType.PointerDown };
-        buttonDown.callback.AddListener(delegate { ClickedButton(buttonID); });
+        buttonDown.callback.AddListener(delegate { ClickedButton(_id); });
 
         EventTrigger.Entry buttonUp = new() { eventID = EventTriggerType.PointerUp };
-        buttonUp.callback.AddListener(delegate { ReleaseButton(buttonID); });
+        buttonUp.callback.AddListener(delegate { ReleaseButton(); });
 
         buttonEvents.triggers.Add(buttonDown);
         buttonEvents.triggers.Add(buttonUp);
     }
+    public void AddWeightOption()
+    {
+        Connection connection = LevelEditorParameters.currentConnection;
+        ManageIslandConnections connectionScript = connection.begin.parent.parent.parent.GetComponent<ManageIslandConnections>();
+
+        int connectionIndex = connectionScript.Connections.FindIndex(delegate (Connection a) { return a == connection; });
+        connectionScript.Connections[connectionIndex].weightOptions.Add(connection.weight);
+    }
+    public void RemoveCurConnection()
+    {
+        Connection connection = LevelEditorParameters.currentConnection;
+
+        if (connection == null)
+            return;
+        if (!connection.begin)
+            return;
+        if (!connection.end)
+            return;
+
+        ManageIslandConnections connectionScript = connection.begin.parent.parent.parent.GetComponent<ManageIslandConnections>();
+        connection.begin.parent.GetComponent<Image>().color = new(0.1908152f, 0.3495883f, 0.6037736f);
+
+        connection.begin.GetComponent<TMP_Text>().text = "";
+        connectionScript.Connections.Remove(connection);
+
+        if (connection.lineRenderer) Destroy(connection.lineRenderer);
+    }
+    public void PassDownConnectionToWeightsConfig(ConfigureWeightOptions weightsConfigScript)
+    {
+        Connection connection = LevelEditorParameters.currentConnection;
+        ManageIslandConnections connectionScript = connection.begin.parent.parent.parent.GetComponent<ManageIslandConnections>();
+        int connectionIndex = connectionScript.Connections.FindIndex(delegate (Connection a) { return a == connection; });
+        weightsConfigScript.CurrentConnection = connectionScript.Connections[connectionIndex];
+    }
     public void MarkBeginIsland()
     {
         if (BeginIslandDefined)
-            IslandScripts[BeginIsland].button.image.color = Color.white;
+            IslandScripts[BeginIsland].button.image.color = defaultIslandColor;
         if (BeginIslandDefined && BeginIsland == CurrentIsland)
         {
             BeginIslandDefined = false;
             return;
         }
-        IslandScripts[CurrentIsland].button.image.color = Color.green;
+        IslandScripts[CurrentIsland].button.image.color = Color.green * defaultIslandColor;
         BeginIsland = CurrentIsland;
         BeginIslandDefined = true;
+        if (EndIsland == CurrentIsland && EndIslandDefined)
+            EndIslandDefined = false;
     }
     public void MarkEndIsland()
     {
         if (EndIslandDefined)
-            IslandScripts[EndIsland].button.image.color = Color.white;
+            IslandScripts[EndIsland].button.image.color = defaultIslandColor;
         if (EndIslandDefined && EndIsland == CurrentIsland)
         {
             EndIslandDefined = false;
             return;
         }
-        IslandScripts[CurrentIsland].button.image.color = Color.red;
+        IslandScripts[CurrentIsland].button.image.color = Color.red * defaultIslandColor;
         EndIsland = CurrentIsland;
         EndIslandDefined = true;
+        if (BeginIsland == CurrentIsland && BeginIslandDefined)
+            BeginIslandDefined = false;
     }
 
     public void DeleteIsland(int id) 
@@ -119,7 +174,15 @@ public class IslandEditor : MonoBehaviour
         Destroy(IslandScripts[id].gameObject);
         IslandScripts.RemoveAt(id);
         for (int i = id; i < IslandScripts.Count; i++)
+        {
             IslandScripts[i].id--;
+            int _id = i;
+
+            EventTrigger.Entry buttonDown = new() { eventID = EventTriggerType.PointerDown };
+            buttonDown.callback.AddListener(delegate { ClickedButton(_id); });
+
+            IslandScripts[i].GetComponent<EventTrigger>().triggers[0] = buttonDown;
+        }
     }
 
     public void EventExportLevel(int splinePointsHaveYValue)
@@ -149,6 +212,12 @@ public class IslandEditor : MonoBehaviour
                 Vector3[] bezierPoints;
                 if (!splinePointsHaveYValue)
                 {
+                    try { curConnection.end.parent.parent.parent.GetComponent<RectTransform>();  }
+                    catch
+                    {
+                        Debug.LogWarning("COULD NOT FIND RECT OF CONNECTION " + j + " AT ISLAND INDEX " + i);
+                        return "";
+                    }
                     Vector2[] bezierPoints2D = IslandScripts[i].CalculateSplinePoints(curConnection.begin.position, curConnection.end.position, curConnection.end.parent.parent.parent.GetComponent<RectTransform>());
                     bezierPoints = new Vector3[bezierPoints2D.Length];
 
@@ -172,7 +241,10 @@ public class IslandEditor : MonoBehaviour
                         bezierPoints[k] = splineTransforms[k].position;
                     }
                 }
-                result.AddEdge(i, curConnection.end.parent.parent.parent.GetComponent<ManageIslandConnections>().id, curConnection.weight, bezierPoints);
+                if (curConnection.weightOptions.Count == 0)
+                    result.AddEdge(i, curConnection.end.parent.parent.parent.GetComponent<ManageIslandConnections>().id, curConnection.weight, bezierPoints);
+                else
+                    result.AddEdge(i, curConnection.end.parent.parent.parent.GetComponent<ManageIslandConnections>().id, 0, bezierPoints, curConnection.weightOptions.ToArray());
 
                 curIndex++;
             }
@@ -183,6 +255,8 @@ public class IslandEditor : MonoBehaviour
 
         //                              Important for converting to worldspace
         Result_TXT += "_" + Display.main.renderingWidth + "," + Display.main.renderingHeight;
+        if (BeginIslandDefined && EndIslandDefined)
+            Result_TXT += "}" + BeginIsland + "," + EndIsland;
 
         if (copyToClipboard)
         {
@@ -261,15 +335,31 @@ public class IslandEditor : MonoBehaviour
                 RectTransform begin, end;
                 LineRenderer lineRenderer;
 
-                Vector2 beginPosition = new(float.Parse(connectionParams[2]), float.Parse(connectionParams[3]));
-                Vector2 endPosition   = new(float.Parse(connectionParams[^2]),float.Parse(connectionParams[^1]));
+                int screenX = int.Parse(level.Split("_")[2].Split(",")[0]);
+                float relativeScaleMod = levelImporter.LevelScaleMod * (1000f / screenX);
+
+                Vector2 beginPosition = new Vector2(float.Parse(connectionParams[2]), float.Parse(connectionParams[4])) / relativeScaleMod;
+                Vector2 endPosition   = new Vector2(float.Parse(connectionParams[^3]),float.Parse(connectionParams[^1]))/ relativeScaleMod;
 
                 begin = FindConnectionRect(IslandScripts[i], beginPosition);
                 end   = FindConnectionRect(IslandScripts[int.Parse(connectionParams[1])], endPosition);
 
                 lineRenderer = IslandScripts[i].AddLineRenderer(begin.parent.GetComponent<RectTransform>());
                 lineRenderer.positionCount = CurveRes;
-                IslandScripts[i].Connections.Add(new(begin, end, lineRenderer, int.Parse(connectionParams[0])));
+
+                int weight = 1;
+                int[] weights = new int[0];
+                if (connectionParams[0].Contains("?"))
+                {
+                    string[] weightsText = connectionParams[0].Split("?");
+                    weights = new int[weightsText.Length];
+                    for (int k = 0; k < weightsText.Length; k++)
+                        weights[k] = int.Parse(weightsText[k]);
+                }
+                else
+                    weight = int.Parse(connectionParams[0]);
+
+                IslandScripts[i].Connections.Add(new(begin, end, lineRenderer, weight, weights));
             }
             if (i < IslandScripts.Count)
                 IslandScripts[i].RefreshLineRenderers();

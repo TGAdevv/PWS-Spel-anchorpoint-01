@@ -90,9 +90,9 @@ public class Graph
             m_Connections.Add((edges != null) ? edges[i] : new Edges());
         }
     }
-    public void AddEdge(int beginVert, int endVert, int weight = 1, Vector3[] bezierPoints = null)
+    public void AddEdge(int beginVert, int endVert, int weight = 1, Vector3[] bezierPoints = null, int[] c_weights = null)
     {
-        m_Connections[beginVert].edges.Add(new Edge(endVert, weight, bezierPoints));
+        m_Connections[beginVert].edges.Add(new Edge(endVert, weight, bezierPoints, c_weights));
     }
     public string ExportGraph() 
     {
@@ -114,7 +114,17 @@ public class Graph
             {
                 Edge curEdge = m_Connections[i].edges[j];
 
-                result += curEdge.weight + ",";
+                if (curEdge.weights.Length > 0)
+                {
+                    for (int k = 0; k < curEdge.weights.Length; k++)
+                    {
+                        result += curEdge.weights[k] + ((k != curEdge.weights.Length - 1) ? "?" : "");
+                    }
+                    result += ",";
+                }
+                else
+                    result += curEdge.weight + ",";
+
                 result += curEdge.vert + ",";
 
                 for (int k = 0; k < curEdge.bezier_points.Length; k++)
@@ -174,6 +184,7 @@ public class Graph
         // ------------------------------
         public int vert;
         public int weight;
+        public int[] weights;
         public Vector3[] bezier_points;
         // ------------------------------
 
@@ -181,11 +192,15 @@ public class Graph
         // ------------------------------
         //  Edge->CONSTRUCTORS
         // ------------------------------
-        public Edge(int c_Vert, int c_Weight = 1, Vector3[] c_BezierPonts = null)
+        public Edge(int c_Vert, int c_Weight = 1, Vector3[] c_BezierPonts = null, int[] c_weights = null)
         {
             vert = c_Vert;
             weight = c_Weight;
             bezier_points = c_BezierPonts;
+            if (c_weights == null)
+                weights = new int[0];
+            else
+                weights = c_weights;
         }
         // ------------------------------
     }
