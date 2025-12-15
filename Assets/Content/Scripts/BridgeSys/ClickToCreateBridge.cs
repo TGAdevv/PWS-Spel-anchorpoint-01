@@ -28,7 +28,6 @@ public class ClickToCreateBridge : MonoBehaviour
             Debug.LogError("Could not find SplineEditor!");
             enabled = false;
         }
-        Currency.m_Blocks = 30;
 
         GameObject PurchaseBlock = Instantiate(MenuPricePrefab, CameraCanvas);
         rect = PurchaseBlock.GetComponent<RectTransform>();

@@ -53,6 +53,7 @@ public class IslandEditor : MonoBehaviour
 
     public Canvas canvas;
     public LevelImporter levelImporter;
+    public Slider BuildingBlocksSlider;
 
     void ClickedButton(int buttonID) 
     {
@@ -278,8 +279,9 @@ public class IslandEditor : MonoBehaviour
 
         //                              Important for converting to worldspace
         Result_TXT += "_" + Display.main.renderingWidth + "," + Display.main.renderingHeight;
+        Result_TXT += "_" + (uint)BuildingBlocksSlider.value;
         if (BeginIslandDefined && EndIslandDefined)
-            Result_TXT += "}" + BeginIsland + "," + EndIsland;
+            Result_TXT += "_}" + BeginIsland + "," + EndIsland;
 
         if (copyToClipboard)
         {
@@ -318,7 +320,7 @@ public class IslandEditor : MonoBehaviour
         return result;
     }
 
-    public void ImportLevel(TMPro.TMP_Text _level) 
+    public void ImportLevel(TMP_Text _level) 
     {
         CultureInfo US = new("en-US");
         Thread.CurrentThread.CurrentCulture = US;

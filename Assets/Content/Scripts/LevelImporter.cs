@@ -32,13 +32,17 @@ public class LevelImporter : MonoBehaviour
     public Transform CameraCanvas;
     public GameObject PriceUIPrefab;
 
+    public GameObject LoadScreenUI;
+
     [Header("FOR EDITOR LEAVE NULL IN GAME SCENE")]
     public GameObject axisPrefab;
+
+    public int currentLevel = 0;
 
     private void Start()
     {
         if (!axisPrefab)
-            ImportLevel(0, 5f);
+            ImportLevel(currentLevel);
     }
 
     bool TestForOverflow(int iteration, [CallerLineNumber] int codeLine = 0)
@@ -49,6 +53,18 @@ public class LevelImporter : MonoBehaviour
             Debug.LogWarning(ErrorLink + ": Exceeded max iteration count of 10000");
         }
         return (iteration > 10000);
+    }
+
+    public void ImportNextLevel()
+    {
+        currentLevel++;
+        if (currentLevel >= levels.Length)
+        {
+            currentLevel--;
+            Debug.LogWarning("Tried to load next level on last level");
+            return;
+        }
+        ImportLevel(currentLevel);
     }
 
     GameObject instantiateIsland(GameObject island, int i, int j, Vector2Int size, float unitSize)
@@ -72,13 +88,17 @@ public class LevelImporter : MonoBehaviour
 
         float unitSize = .3f * (screenRes.x / screenRes.y) * relativeLevelScaleMod;
 
+        int curIndex = 0;
         for (int i = 0; i < size.x; i++)
         {
             for (int j = 0; j < size.y; j++)
             {
                 GameObject newTile = instantiateIsland(island, i, j, size, unitSize);
                 newTile.transform.localScale *= unitSize;
-                yield return new WaitForSeconds(.2f);
+
+                if (curIndex % 3 == 0)
+                    yield return new WaitForFixedUpdate();
+                curIndex++;
             }
         }
 
@@ -106,7 +126,7 @@ public class LevelImporter : MonoBehaviour
 
         SplineEditor newSpline = newBridge.AddComponent<SplineEditor>();
         newSpline.BridgeMats  = BridgeMats;
-        newSpline.resolution  = Mathf.CeilToInt(splineDistance  / DistancePerSample);
+        newSpline.resolution  = Mathf.Clamp(Mathf.CeilToInt(splineDistance  / DistancePerSample), 2, 1000);
         newSpline.pillarCount = Mathf.RoundToInt(splineDistance / DistancePerPillar);
         newSpline.bridgeWidth = unitSize * .15f;
         newSpline.bridgeHeight = unitSize * .25f;
@@ -144,13 +164,13 @@ public class LevelImporter : MonoBehaviour
 
     int LevelId = 0;
     bool PreviewMode = false;
-    float LoadTime = 0;
 
     IEnumerator importLevel()
     {
         CultureInfo US = new("en-US");
         Thread.CurrentThread.CurrentCulture = US;
         transform.position = Vector3.zero;
+        mapCenter = Vector3.zero;
 
         //First wipe everything from the current scene
         for (int i = 0; i < CameraCanvas.childCount; i++)
@@ -171,6 +191,7 @@ public class LevelImporter : MonoBehaviour
         screenRes = new(int.Parse(screenResComponents[0]), int.Parse(screenResComponents[1]));
 
         relativeLevelScaleMod = LevelScaleMod * (1000 / screenRes.x);
+        Currency.m_Blocks = uint.Parse(level.Split("_")[3]);
 
         for (int i = 0; i < islands.Length; i++)
         {
@@ -222,14 +243,18 @@ public class LevelImporter : MonoBehaviour
 
                 CreateBridge(splinePoints, weight, new(i, j), weights);
             }
-            yield return new WaitForSeconds(.5f * LoadTime / Allconnections.Length);
+            yield return new WaitForFixedUpdate();
         }
+        LoadScreenUI.SetActive(false);
     }
 
-    public void ImportLevel(int levelID, float loadTime, bool previewMode=false)
+    public void ImportLevel(int levelID, bool previewMode=false)
     {
+        if (levelID >= levels.Length)
+            levelID = levels.Length - 1;
+
+        LoadScreenUI.SetActive(true);
         LevelId = levelID;
-        LoadTime = loadTime;
         PreviewMode = previewMode;
         StartCoroutine(importLevel());
     }
