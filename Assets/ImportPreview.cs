@@ -15,6 +15,6 @@ public class ImportPreview : MonoBehaviour
         print("code is " + levelCode);
 
         levelImporter.levels = new string[1] { levelCode };
-        levelImporter.ImportLevel(0, true);
+        levelImporter.ImportLevel(0, 3f, true);
     }
 }

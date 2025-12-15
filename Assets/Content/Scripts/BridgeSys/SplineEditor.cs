@@ -88,14 +88,14 @@ public class SplineEditor : MonoBehaviour
 
         int currentTaIndex = 1;
 
-        for (float i = 0; i < resolution * 100; i++)
+        for (float i = 0; i < resolution * 10; i++)
         {
-            curveLength += Vector3.Magnitude(SamplePointInCurve(i/(resolution * 100)) - SamplePointInCurve((i + 1) / (resolution * 100)));
+            curveLength += Vector3.Magnitude(SamplePointInCurve(i/(resolution * 10)) - SamplePointInCurve((i + 1) / (resolution * 10)));
         }
         float tempLength = 0;
         float prevLength = 0;
         float targetLength = 1 / ((float)resolution + 1f);
-        for (float i = 0; i < resolution * 100; i++)
+        for (float i = 0; i < resolution * 25; i++)
         {
             if (currentTaIndex+1 == resolution)
             {
@@ -104,9 +104,9 @@ public class SplineEditor : MonoBehaviour
             }
 
             prevLength = tempLength;
-            tempLength += Vector3.Magnitude(SamplePointInCurve(i / (resolution * 100)) - SamplePointInCurve((i+1) / (resolution * 100)));
+            tempLength += Vector3.Magnitude(SamplePointInCurve(i / (resolution * 25)) - SamplePointInCurve((i+1) / (resolution * 25)));
             if (Mathf.Abs(tempLength - targetLength * curveLength) < Mathf.Abs(prevLength - targetLength * curveLength))
-                trTOta[currentTaIndex] = i / ((float)resolution * 100);
+                trTOta[currentTaIndex] = i / ((float)resolution * 25);
             else
             {
                 currentTaIndex++;

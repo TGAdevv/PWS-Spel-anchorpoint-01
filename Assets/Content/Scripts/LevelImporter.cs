@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -34,15 +35,26 @@ public class LevelImporter : MonoBehaviour
     private void Start()
     {
         if (!axisPrefab)
-            ImportLevel(0);
+            ImportLevel(0, 5f);
     }
 
-    void CreateIsland(Vector2 pos, Vector2Int size) 
+    GameObject instantiateIsland(GameObject island, int i, int j, Vector2Int size, float unitSize)
+    {
+        return Instantiate(
+                    //TEMP! Should not be 0 (but the tile actually needed)
+                    IslandTiles[Mathf.RoundToInt(Random.Range(0.0f, 4.0f))],
+                    island.transform.position + new Vector3(i - (size.x - 1) * .5f, 0, j - (size.y - 1) * .5f) * unitSize,
+                    Quaternion.identity,
+                    island.transform);
+    }
+
+    bool finished = false;
+
+    IEnumerator CreateIsland(Vector2 pos, Vector2Int size)
     {
         GameObject island = new("island " + pos.ToString());
         island.transform.position = new Vector3(pos.x, 0, pos.y) * relativeLevelScaleMod;
         island.transform.parent = IslandsParent;
-
         mapCenter += island.transform.position;
 
         float unitSize = .3f * (screenRes.x / screenRes.y) * relativeLevelScaleMod;
@@ -50,18 +62,15 @@ public class LevelImporter : MonoBehaviour
         for (int i = 0; i < size.x; i++)
         {
             for (int j = 0; j < size.y; j++)
-            { 
-                GameObject newTile = Instantiate(
-                    //TEMP! Should not be 0 (but the tile actually needed)
-                    IslandTiles[Mathf.RoundToInt(Random.Range(0.0f, 1.0f))], 
-                    island.transform.position + new Vector3(i - (size.x - 1) * .5f, 0, j - (size.y - 1) * .5f) * unitSize, 
-                    Quaternion.identity, 
-                    island.transform);
+            {
+                GameObject newTile = instantiateIsland(island, i, j, size, unitSize);
                 newTile.transform.localScale *= unitSize;
+                yield return new WaitForSeconds(.2f);
             }
         }
 
         Islands.Add(island.transform);
+        finished = true;
     }
     void CreateBridge(Vector3[] splinePoints, float weight, Vector2Int index, float[] weights = null)
     {
@@ -96,7 +105,7 @@ public class LevelImporter : MonoBehaviour
         for (int i = 0; i < splinePoints.Length; i++)
         {
             GameObject newSplinePoint = new("P" + i);
-            newSplinePoint.transform.position = splinePoints[i];
+            newSplinePoint.transform.position = splinePoints[i] + transform.position;
             newSplinePoint.transform.parent   = newBridge.transform;
             splineTransforms.Add(newSplinePoint.transform);
 
@@ -120,7 +129,11 @@ public class LevelImporter : MonoBehaviour
         Bridges.Add(newSpline);
     }
 
-    public void ImportLevel(int levelID, bool PreviewMode=false)
+    int LevelId = 0;
+    bool PreviewMode = false;
+    float LoadTime = 0;
+
+    IEnumerator importLevel()
     {
         transform.position = Vector3.zero;
 
@@ -134,7 +147,7 @@ public class LevelImporter : MonoBehaviour
         Islands = new();
         Bridges = new();
 
-        string level = levels[levelID];
+        string level = levels[LevelId];
 
         string[] islands = level.Split("_")[0].Split(";");
         string[] Allconnections = level.Split("_")[1].Split("/");
@@ -151,11 +164,16 @@ public class LevelImporter : MonoBehaviour
             if (islandParams.Length < 4)
                 continue;
 
-            Vector2 pos     = new(float.Parse(islandParams[0]), float.Parse(islandParams[1]));
-            Vector2Int size = new(int.Parse(islandParams[2]),   int.Parse(islandParams[3]));
+            Vector2 pos = new(float.Parse(islandParams[0]), float.Parse(islandParams[1]));
+            Vector2Int size = new(int.Parse(islandParams[2]), int.Parse(islandParams[3]));
 
-            CreateIsland(pos, size);
+            finished = false;
+            StartCoroutine(CreateIsland(pos, size));
+            yield return new WaitUntil(delegate { return finished; });
         }
+
+        if (!axisPrefab)
+            transform.position = -mapCenter / islands.Length;
 
         for (int i = 0; i < Allconnections.Length; i++)
         {
@@ -167,9 +185,9 @@ public class LevelImporter : MonoBehaviour
                 if (connectionParams.Length < 6)
                     continue;
 
-                Vector3[] splinePoints = new Vector3[Mathf.FloorToInt((connectionParams.Length - 2)/3f)];
+                Vector3[] splinePoints = new Vector3[Mathf.FloorToInt((connectionParams.Length - 2) / 3f)];
                 for (int k = 0; k < splinePoints.Length; k++)
-                    splinePoints[k]  = new Vector3(float.Parse(connectionParams[k * 3 + 2]), float.Parse(connectionParams[k * 3 + 3]), float.Parse(connectionParams[k * 3 + 4])) * (PreviewMode ? relativeLevelScaleMod : 1);
+                    splinePoints[k] = new Vector3(float.Parse(connectionParams[k * 3 + 2]), float.Parse(connectionParams[k * 3 + 3]), float.Parse(connectionParams[k * 3 + 4])) * (PreviewMode ? relativeLevelScaleMod : 1);
                 float weight = 1;
                 float[] weights = new float[0];
                 if (connectionParams[0].Contains("?"))
@@ -184,9 +202,15 @@ public class LevelImporter : MonoBehaviour
 
                 CreateBridge(splinePoints, weight, new(i, j), weights);
             }
+            yield return new WaitForSeconds(.5f * LoadTime / Allconnections.Length);
         }
+    }
 
-        if (!axisPrefab)
-            transform.position = -mapCenter / islands.Length;
+    public void ImportLevel(int levelID, float loadTime, bool previewMode=false)
+    {
+        LevelId = levelID;
+        LoadTime = loadTime;
+        PreviewMode = previewMode;
+        StartCoroutine(importLevel());
     }
 }
