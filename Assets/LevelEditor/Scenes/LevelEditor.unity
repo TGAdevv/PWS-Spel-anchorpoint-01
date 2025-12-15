@@ -9572,7 +9572,7 @@ MonoBehaviour:
   Bridges: []
   LevelScaleMod: 40
   DistancePerPillar: 5
-  DistancePerSample: 0.1
+  DistancePerSample: 1
   IslandTiles:
   - {fileID: 7570628236224207440, guid: c1989f312f037ea4d8cdd5126b3d4cef, type: 3}
   - {fileID: 265641414430120835, guid: 77e217161f5edc14da5838bde164f8a1, type: 3}

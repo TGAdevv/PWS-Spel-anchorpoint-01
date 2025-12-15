@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -190,6 +191,16 @@ public class IslandEditor : MonoBehaviour
         ExportLevel(splinePointsHaveYValue == 1);
     }
 
+    bool TestForOverflow(int iteration, [CallerLineNumber] int codeLine = 0)
+    {
+        if (iteration > 10000)
+        {
+            string ErrorLink = "<a href=\"Assets/LevelEditor/Scripts/IslandEditor.cs\" line=\"" + codeLine + "\">Custom Error 0.0</a>";
+            Debug.LogWarning(ErrorLink + ": Exceeded max iteration count of 10000");
+        }
+        return (iteration > 10000);
+    }
+
     // Turns everything into a graph
     public string ExportLevel(bool splinePointsHaveYValue, bool copyToClipboard = true) 
     {
@@ -197,6 +208,8 @@ public class IslandEditor : MonoBehaviour
         Vector2Int[] islandSizes = new Vector2Int[islandPositions.Length];
         for (int i = 0; i < islandPositions.Length; i++)
         {
+            if (TestForOverflow(i, 210)) return "ERROR";
+
             islandPositions[i] = IslandScripts[i].rect.position;
             islandSizes[i]     = new(IslandScripts[i].nWidth, IslandScripts[i].nHeight);
         }
@@ -206,8 +219,12 @@ public class IslandEditor : MonoBehaviour
         int curIndex = 0;
         for (int i = 0; i < IslandScripts.Count; i++)
         {
+            if (TestForOverflow(i)) return "ERROR";
+
             for (int j = 0; j < IslandScripts[i].Connections.Count; j++)
             {
+                if (TestForOverflow(j)) return "ERROR";
+
                 Connection curConnection = IslandScripts[i].Connections[j];
                 Vector3[] bezierPoints;
                 if (!splinePointsHaveYValue)
@@ -238,6 +255,7 @@ public class IslandEditor : MonoBehaviour
                     bezierPoints = new Vector3[splineTransforms.Length];
                     for (int k = 0; k < splineTransforms.Length; k++)
                     {
+                        if (TestForOverflow(k)) return "ERROR";
                         bezierPoints[k] = splineTransforms[k].position;
                     }
                 }
@@ -315,6 +333,8 @@ public class IslandEditor : MonoBehaviour
 
         for (int i = 0; i < islands.Length; i++)
         {
+            if (TestForOverflow(i)) return;
+
             string[] islandParams = islands[i].Split(",");
             CreateIsland();
             IslandScripts[^1].DefineStartVariables();
@@ -324,10 +344,13 @@ public class IslandEditor : MonoBehaviour
 
         for (int i = 0; i < Allconnections.Length; i++)
         {
+            if (TestForOverflow(i)) return;
             string[] connections = Allconnections[i].Split(";");
 
             for (int j = 0; j < connections.Length; j++)
             {
+                if (TestForOverflow(j)) return;
+
                 string[] connectionParams = connections[j].Split(",");
                 if (connectionParams.Length < 6)
                     continue;

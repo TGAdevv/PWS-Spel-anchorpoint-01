@@ -14,6 +14,11 @@ public class ImportPreview : MonoBehaviour
 
         print("code is " + levelCode);
 
+        if (levelCode == "ERROR")
+        {
+            Debug.LogWarning("Level code has not generated succesfully");
+        }
+
         levelImporter.levels = new string[1] { levelCode };
         levelImporter.ImportLevel(0, 3f, true);
     }

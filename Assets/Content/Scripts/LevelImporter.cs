@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 public class LevelImporter : MonoBehaviour
@@ -36,6 +37,16 @@ public class LevelImporter : MonoBehaviour
     {
         if (!axisPrefab)
             ImportLevel(0, 5f);
+    }
+
+    bool TestForOverflow(int iteration, [CallerLineNumber] int codeLine = 0)
+    {
+        if (iteration > 10000)
+        {
+            string ErrorLink = "<a href=\"Assets/Content/Scripts/LevelImporter.cs\" line=\"" + codeLine + "\">Custom Error 0.1</a>";
+            Debug.LogWarning(ErrorLink + ": Exceeded max iteration count of 10000");
+        }
+        return (iteration > 10000);
     }
 
     GameObject instantiateIsland(GameObject island, int i, int j, Vector2Int size, float unitSize)
@@ -177,17 +188,22 @@ public class LevelImporter : MonoBehaviour
 
         for (int i = 0; i < Allconnections.Length; i++)
         {
+            if (TestForOverflow(i)) yield return -1;
             string[] connections = Allconnections[i].Split(";");
 
             for (int j = 0; j < connections.Length; j++)
             {
+                if (TestForOverflow(j)) yield return -1;
                 string[] connectionParams = connections[j].Split(",");
                 if (connectionParams.Length < 6)
                     continue;
 
                 Vector3[] splinePoints = new Vector3[Mathf.FloorToInt((connectionParams.Length - 2) / 3f)];
                 for (int k = 0; k < splinePoints.Length; k++)
+                {
+                    if (TestForOverflow(k)) yield return -1;
                     splinePoints[k] = new Vector3(float.Parse(connectionParams[k * 3 + 2]), float.Parse(connectionParams[k * 3 + 3]), float.Parse(connectionParams[k * 3 + 4])) * (PreviewMode ? relativeLevelScaleMod : 1);
+                }
                 float weight = 1;
                 float[] weights = new float[0];
                 if (connectionParams[0].Contains("?"))

@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 [ExecuteAlways]
 public class SplineEditor : MonoBehaviour
@@ -28,6 +29,16 @@ public class SplineEditor : MonoBehaviour
 
     float beginAngle;
     float endAngle;
+
+    bool TestForOverflow(int iteration, [CallerLineNumber] int codeLine = 0)
+    {
+        if (iteration > 10000)
+        {
+            string ErrorLink = "<a href=\"Assets/Content/Scripts/BridgeSys/SplineEditor.cs\" line=\"" + codeLine + "\">Custom Error 0.2</a>";
+            Debug.LogWarning(ErrorLink + ": Exceeded max iteration count of 10000");
+        }
+        return (iteration > 10000);
+    }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -88,15 +99,18 @@ public class SplineEditor : MonoBehaviour
 
         int currentTaIndex = 1;
 
-        for (float i = 0; i < resolution * 10; i++)
+        for (float i = 0; i < resolution * 2; i++)
         {
-            curveLength += Vector3.Magnitude(SamplePointInCurve(i/(resolution * 10)) - SamplePointInCurve((i + 1) / (resolution * 10)));
+            if (TestForOverflow((int)i)) return;
+            curveLength += Vector3.Magnitude(SamplePointInCurve(i/(resolution * 2)) - SamplePointInCurve((i + 1) / (resolution * 2)));
         }
         float tempLength = 0;
         float prevLength = 0;
         float targetLength = 1 / ((float)resolution + 1f);
-        for (float i = 0; i < resolution * 25; i++)
+        for (float i = 0; i < resolution * 3; i++)
         {
+            if (TestForOverflow((int)i)) return;
+
             if (currentTaIndex+1 == resolution)
             {
                 trTOta[currentTaIndex] = 1;
@@ -104,9 +118,9 @@ public class SplineEditor : MonoBehaviour
             }
 
             prevLength = tempLength;
-            tempLength += Vector3.Magnitude(SamplePointInCurve(i / (resolution * 25)) - SamplePointInCurve((i+1) / (resolution * 25)));
+            tempLength += Vector3.Magnitude(SamplePointInCurve(i / (resolution * 3)) - SamplePointInCurve((i+1) / (resolution * 3)));
             if (Mathf.Abs(tempLength - targetLength * curveLength) < Mathf.Abs(prevLength - targetLength * curveLength))
-                trTOta[currentTaIndex] = i / ((float)resolution * 25);
+                trTOta[currentTaIndex] = i / ((float)resolution * 3);
             else
             {
                 currentTaIndex++;
@@ -137,6 +151,7 @@ public class SplineEditor : MonoBehaviour
         // Vertices
         for (float i = 0; i < resolution; i++)
         {
+            if (TestForOverflow((int)i)) return;
             float t = trTOta[Mathf.RoundToInt(i)];
 
             Vector3 p = SamplePointInCurve(t);
@@ -166,6 +181,7 @@ public class SplineEditor : MonoBehaviour
         // Triangles
         for (int i = 0; i < resolution - 1; i++)
         {
+            if (TestForOverflow((int)i)) return;
             //Top part bridge
             triangles.Add(i * 4 + 1);
             triangles.Add(i * 4 + 4);
@@ -287,8 +303,11 @@ public class SplineEditor : MonoBehaviour
             return;
 
         for (int i = splinePoints.Count - 1; i >= 0; i--)
+        {
+            if (TestForOverflow(i)) return;
             if (!splinePoints[i])
                 splinePoints.RemoveAt(i);
+        }
 
         if (realtimeMeshUpdate && !Application.isPlaying)
             GenerateSpline();
