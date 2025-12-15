@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -204,6 +206,9 @@ public class IslandEditor : MonoBehaviour
     // Turns everything into a graph
     public string ExportLevel(bool splinePointsHaveYValue, bool copyToClipboard = true) 
     {
+        CultureInfo US = new("en-US");
+        Thread.CurrentThread.CurrentCulture = US;
+
         Vector2[] islandPositions = new Vector2[IslandScripts.Count];
         Vector2Int[] islandSizes = new Vector2Int[islandPositions.Length];
         for (int i = 0; i < islandPositions.Length; i++)
@@ -240,6 +245,7 @@ public class IslandEditor : MonoBehaviour
 
                     for (int k = 0; k < bezierPoints2D.Length; k++)
                     {
+                        if (TestForOverflow(k)) return "ERROR";
                         bezierPoints[k] = new(bezierPoints2D[k].x, (k == 0 || k == bezierPoints.Length-1) ? 0 : .15f, bezierPoints2D[k].y);
                     }
                 }
@@ -268,7 +274,6 @@ public class IslandEditor : MonoBehaviour
             }
         }
 
-        print(result.ToString());
         string Result_TXT = result.ExportGraph();
 
         //                              Important for converting to worldspace
@@ -315,6 +320,9 @@ public class IslandEditor : MonoBehaviour
 
     public void ImportLevel(TMPro.TMP_Text _level) 
     {
+        CultureInfo US = new("en-US");
+        Thread.CurrentThread.CurrentCulture = US;
+
         //First wipe everything from whats currently being edited
         foreach (ManageIslandConnections island in IslandScripts)
             Destroy(island.gameObject);

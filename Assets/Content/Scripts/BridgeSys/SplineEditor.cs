@@ -120,9 +120,13 @@ public class SplineEditor : MonoBehaviour
             prevLength = tempLength;
             tempLength += Vector3.Magnitude(SamplePointInCurve(i / (resolution * 3)) - SamplePointInCurve((i+1) / (resolution * 3)));
             if (Mathf.Abs(tempLength - targetLength * curveLength) < Mathf.Abs(prevLength - targetLength * curveLength))
-                trTOta[currentTaIndex] = i / ((float)resolution * 3);
+                trTOta[currentTaIndex] = i / ((float)resolution * 3 - 1);
             else
             {
+                if (currentTaIndex > 0)
+                    if (trTOta[currentTaIndex] == 0 && trTOta[currentTaIndex-1] > 0)
+                        trTOta[currentTaIndex] = trTOta[currentTaIndex - 1];
+
                 currentTaIndex++;
                 targetLength = currentTaIndex / ((float)resolution + 1f);
             }

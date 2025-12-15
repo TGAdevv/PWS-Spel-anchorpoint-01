@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using UnityEngine;
 
 public class LevelImporter : MonoBehaviour
@@ -146,6 +148,8 @@ public class LevelImporter : MonoBehaviour
 
     IEnumerator importLevel()
     {
+        CultureInfo US = new("en-US");
+        Thread.CurrentThread.CurrentCulture = US;
         transform.position = Vector3.zero;
 
         //First wipe everything from the current scene

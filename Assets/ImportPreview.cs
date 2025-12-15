@@ -12,8 +12,6 @@ public class ImportPreview : MonoBehaviour
 
         string levelCode = islandEditor.ExportLevel(false, false);
 
-        print("code is " + levelCode);
-
         if (levelCode == "ERROR")
         {
             Debug.LogWarning("Level code has not generated succesfully");

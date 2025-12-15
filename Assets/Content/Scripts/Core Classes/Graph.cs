@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
+using System.Threading;
 using UnityEngine;
 
 public class Graph
@@ -96,6 +98,9 @@ public class Graph
     }
     public string ExportGraph() 
     {
+        CultureInfo US = new("en-US");
+        Thread.CurrentThread.CurrentCulture = US;
+
         string result = "";
 
         for (int i = 0; i < m_Vertices.Count; i++)
@@ -118,7 +123,7 @@ public class Graph
                 {
                     for (int k = 0; k < curEdge.weights.Length; k++)
                     {
-                        result += curEdge.weights[k] + ((k != curEdge.weights.Length - 1) ? "?" : "");
+                        result += curEdge.weights[k].ToString() + ((k != curEdge.weights.Length - 1) ? "?" : "");
                     }
                     result += ",";
                 }
@@ -129,9 +134,9 @@ public class Graph
 
                 for (int k = 0; k < curEdge.bezier_points.Length; k++)
                 {
-                    result += curEdge.bezier_points[k].x + ",";
-                    result += curEdge.bezier_points[k].y + ",";
-                    result += curEdge.bezier_points[k].z;
+                    result += curEdge.bezier_points[k].x.ToString() + ",";
+                    result += curEdge.bezier_points[k].y.ToString() + ",";
+                    result += curEdge.bezier_points[k].z.ToString();
                     if (k < curEdge.bezier_points.Length - 1)
                         result += ",";
                 }
