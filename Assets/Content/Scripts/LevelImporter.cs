@@ -39,6 +39,10 @@ public class LevelImporter : MonoBehaviour
 
     public int currentLevel = 0;
 
+    // New fields for start and end islands, initialized to -1 (undefined)
+    public int startIsland = -1;
+    public int endIsland = -1;
+
     private void Start()
     {
         if (!axisPrefab)
@@ -184,14 +188,39 @@ public class LevelImporter : MonoBehaviour
 
         string level = levels[LevelId];
 
-        string[] islands = level.Split("_")[0].Split(";");
-        string[] Allconnections = level.Split("_")[1].Split("/");
+        // Split the level string into parts by '_'
+        string[] parts = level.Split('_');
 
-        string[] screenResComponents = level.Split("_")[2].Split(",");
+        // Parse islands: first part, split by ';'
+        string[] islands = parts[0].Split(";");
+
+        // Parse connections: second part, split by '/'
+        string[] Allconnections = parts[1].Split("/");
+
+        // Parse screen resolution: third part, split by ','
+        string[] screenResComponents = parts[2].Split(",");
         screenRes = new(int.Parse(screenResComponents[0]), int.Parse(screenResComponents[1]));
 
         relativeLevelScaleMod = LevelScaleMod * (1000 / screenRes.x);
-        Currency.m_Blocks = uint.Parse(level.Split("_")[3]);
+
+        // Parse start and end islands: fourth part starts with '}', then optional 'start,end'
+        string possibleStartEndPart = parts[3];
+        if (possibleStartEndPart.StartsWith("}")) {
+            string startEnd = possibleStartEndPart.Substring(1); // Remove the '}'
+            startIsland = int.Parse(startEnd.Split(",")[0]); // Set start island
+            endIsland = int.Parse(startEnd.Split(",")[1]); // Set end island if provided
+
+        } else {
+            // parts[3] contains building blocks info 
+            Currency.m_Blocks = uint.Parse(parts[3]);
+            startIsland = -1; // Undefined
+            endIsland = -1; // Undefined
+        }
+
+        // Parse building blocks: fifth part if exists, otherwise keep default
+        if (parts.Length > 4) {
+            Currency.m_Blocks = uint.Parse(parts[4]);
+        }
 
         for (int i = 0; i < islands.Length; i++)
         {

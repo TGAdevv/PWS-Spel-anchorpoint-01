@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -324,8 +325,9 @@ public class IslandEditor : MonoBehaviour
     {
         CultureInfo US = new("en-US");
         Thread.CurrentThread.CurrentCulture = US;
+        Debug.Log("Importing level: " + _level.text);
 
-        //First wipe everything from whats currently being edited
+        // Wipe everything from what's currently being edited
         foreach (ManageIslandConnections island in IslandScripts)
             Destroy(island.gameObject);
         IslandScripts = new();
@@ -341,6 +343,51 @@ public class IslandEditor : MonoBehaviour
         string[] islands        = level.Split("_")[0].Split(";");
         string[] Allconnections = level.Split("_")[1].Split("/");
 
+        string buildingblocks = null;
+        string startend = null;
+
+        if (level.Split("_").Length > 3)
+        {
+            if (level.Split("_")[3].StartsWith("}"))
+            {
+                // parts[3] is }start,end
+                startend = level.Split("_")[3];
+            }
+            else
+            {
+                // parts[3] is buildingblocks
+                buildingblocks = level.Split("_")[3];
+                if (!int.TryParse(buildingblocks.Trim(), out int sliderValue)){
+                    string cleanBB = new string(buildingblocks.Where(c => char.IsDigit(c)).ToArray());
+                    if (int.TryParse(cleanBB.Trim(), out sliderValue))
+                    {
+                        BuildingBlocksSlider.value = sliderValue;
+                    }
+                    else
+                    {
+                        sliderValue = 1;  
+                    }  
+                }
+                BuildingBlocksSlider.value = sliderValue;
+            }
+        }
+        if (level.Split("_").Length > 4)
+        {
+            buildingblocks = level.Split("_")[4];
+            BuildingBlocksSlider.value = int.Parse(buildingblocks.Trim());
+        }
+
+        // Set start and end islands if provided
+        if (!string.IsNullOrEmpty(startend))
+        {
+            string[] startEndParts = startend.Split("}")[1].Split(",");
+            BeginIsland = int.Parse(startEndParts[0].Trim());
+            BeginIslandDefined = true;
+            EndIsland = int.Parse(startEndParts[1].Trim());
+            EndIslandDefined = true;
+        }
+
+        // Create islands
         for (int i = 0; i < islands.Length; i++)
         {
             if (TestForOverflow(i)) return;
@@ -348,8 +395,8 @@ public class IslandEditor : MonoBehaviour
             string[] islandParams = islands[i].Split(",");
             CreateIsland();
             IslandScripts[^1].DefineStartVariables();
-            IslandScripts[^1].UpdateConnections(int.Parse(islandParams[2]), int.Parse(islandParams[3]));
-            IslandScripts[^1].rect.position = new Vector2(float.Parse(islandParams[0]), float.Parse(islandParams[1]));
+            IslandScripts[^1].UpdateConnections(int.Parse(islandParams[2].Trim()), int.Parse(islandParams[3].Trim()));
+            IslandScripts[^1].rect.position = new Vector2(float.Parse(islandParams[0].Trim()), float.Parse(islandParams[1].Trim()));
         }
 
         for (int i = 0; i < Allconnections.Length; i++)
@@ -360,22 +407,31 @@ public class IslandEditor : MonoBehaviour
             for (int j = 0; j < connections.Length; j++)
             {
                 if (TestForOverflow(j)) return;
-
-                string[] connectionParams = connections[j].Split(",");
-                if (connectionParams.Length < 6)
+                if (string.IsNullOrWhiteSpace(connections[j]))
                     continue;
 
+                string[] connectionParams = connections[j].Split(",");
+                bool emptySpace = false;
+                for (int p = 0; p < connectionParams.Length; p++)
+                {
+                    connectionParams[p] = connectionParams[p].Trim();
+                    if (string.IsNullOrEmpty(connectionParams[p]))
+                        emptySpace = true;
+                }
+                if (connectionParams.Length < 6 || emptySpace)
+                    continue;
+                
                 RectTransform begin, end;
                 LineRenderer lineRenderer;
 
-                int screenX = int.Parse(level.Split("_")[2].Split(",")[0]);
+                int screenX = int.Parse(level.Split("_")[2].Split(",")[0].Trim());
                 float relativeScaleMod = levelImporter.LevelScaleMod * (1000f / screenX);
 
-                Vector2 beginPosition = new Vector2(float.Parse(connectionParams[2]), float.Parse(connectionParams[4])) / relativeScaleMod;
-                Vector2 endPosition   = new Vector2(float.Parse(connectionParams[^3]),float.Parse(connectionParams[^1]))/ relativeScaleMod;
+                Vector2 beginPosition = new Vector2(float.Parse(connectionParams[2].Trim()), float.Parse(connectionParams[4].Trim())) / relativeScaleMod;
+                Vector2 endPosition   = new Vector2(float.Parse(connectionParams[^3].Trim()),float.Parse(connectionParams[^1].Trim())) / relativeScaleMod;
 
                 begin = FindConnectionRect(IslandScripts[i], beginPosition);
-                end   = FindConnectionRect(IslandScripts[int.Parse(connectionParams[1])], endPosition);
+                end   = FindConnectionRect(IslandScripts[int.Parse(connectionParams[1].Trim())], endPosition);
 
                 lineRenderer = IslandScripts[i].AddLineRenderer(begin.parent.GetComponent<RectTransform>());
                 lineRenderer.positionCount = CurveRes;
@@ -387,10 +443,10 @@ public class IslandEditor : MonoBehaviour
                     string[] weightsText = connectionParams[0].Split("?");
                     weights = new int[weightsText.Length];
                     for (int k = 0; k < weightsText.Length; k++)
-                        weights[k] = int.Parse(weightsText[k]);
+                        weights[k] = int.Parse(weightsText[k].Trim());
                 }
                 else
-                    weight = int.Parse(connectionParams[0]);
+                    weight = int.Parse(connectionParams[0].Trim());
 
                 IslandScripts[i].Connections.Add(new(begin, end, lineRenderer, weight, weights));
             }
