@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -374,17 +375,18 @@ public class IslandEditor : MonoBehaviour
         if (level.Split("_").Length > 4)
         {
             buildingblocks = level.Split("_")[4];
-            BuildingBlocksSlider.value = int.Parse(buildingblocks.Trim());
-        }
-
-        // Set start and end islands if provided
-        if (!string.IsNullOrEmpty(startend))
-        {
-            string[] startEndParts = startend.Split("}")[1].Split(",");
-            BeginIsland = int.Parse(startEndParts[0].Trim());
-            BeginIslandDefined = true;
-            EndIsland = int.Parse(startEndParts[1].Trim());
-            EndIslandDefined = true;
+            if (!int.TryParse(buildingblocks.Trim(), out int sliderValue)){
+                string cleanBB = new string(buildingblocks.Where(c => char.IsDigit(c)).ToArray());
+                if (int.TryParse(cleanBB.Trim(), out sliderValue))
+                {
+                    BuildingBlocksSlider.value = sliderValue;
+                } 
+                else
+                {
+                    sliderValue = 1;  
+                }
+                }
+                BuildingBlocksSlider.value = sliderValue;
         }
 
         // Create islands
@@ -436,7 +438,7 @@ public class IslandEditor : MonoBehaviour
                 lineRenderer = IslandScripts[i].AddLineRenderer(begin.parent.GetComponent<RectTransform>());
                 lineRenderer.positionCount = CurveRes;
 
-                int weight = 1;
+                int weight = 0;
                 int[] weights = new int[0];
                 if (connectionParams[0].Contains("?"))
                 {
@@ -453,5 +455,34 @@ public class IslandEditor : MonoBehaviour
             if (i < IslandScripts.Count)
                 IslandScripts[i].RefreshLineRenderers();
         }
+        
+        // Set start and end islands if provided
+        if (!string.IsNullOrEmpty(startend))
+        {
+            string[] startEndParts = startend.Split("}")[1].Split(",");
+            BeginIsland = int.Parse(startEndParts[0].Trim());
+            //endisland needs to be set carefully, as there could be trailing whitespace that disturbs parsing
+            if (!int.TryParse(startEndParts[1].Trim(), out int endValue)){
+                string cleanEE = new string(startEndParts[1].Where(c => char.IsDigit(c)).ToArray());
+                if (int.TryParse(cleanEE.Trim(), out endValue))
+                {
+                    EndIsland = endValue;
+                } 
+                else
+                {
+                    endValue = 0;
+                }
+                }
+            EndIsland = endValue;
+            // Temporarily set CurrentIsland to mark the islands correctly
+            int originalCurrent = CurrentIsland;
+            CurrentIsland = EndIsland;
+            MarkEndIsland();
+            CurrentIsland = BeginIsland;
+            MarkBeginIsland();
+            CurrentIsland = originalCurrent;
+        }
+            
+        
     }
 }

@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using UnityEngine;
+using System.Linq;
 
 public class LevelImporter : MonoBehaviour
 {
@@ -207,8 +208,24 @@ public class LevelImporter : MonoBehaviour
         string possibleStartEndPart = parts[3];
         if (possibleStartEndPart.StartsWith("}")) {
             string startEnd = possibleStartEndPart.Substring(1); // Remove the '}'
-            startIsland = int.Parse(startEnd.Split(",")[0]); // Set start island
-            endIsland = int.Parse(startEnd.Split(",")[1]); // Set end island if provided
+            if (!string.IsNullOrEmpty(startEnd))
+            {
+                string[] startEndParts = startEnd.Split(",");
+                startIsland = int.Parse(startEndParts[0].Trim());
+                //endisland needs to be set carefully, as there could be trailing whitespace that disturbs parsing
+                if (!int.TryParse(startEndParts[1].Trim(), out int endValue)){
+                    string cleanEE = new string(startEndParts[1].Where(c => char.IsDigit(c)).ToArray());
+                    if (int.TryParse(cleanEE.Trim(), out endValue))
+                    {
+                        endIsland = endValue;
+                    } 
+                    else
+                    {
+                        endValue = 0;
+                    }
+                }
+                endIsland = endValue;
+            }
 
         } else {
             // parts[3] contains building blocks info 
@@ -219,7 +236,25 @@ public class LevelImporter : MonoBehaviour
 
         // Parse building blocks: fifth part if exists, otherwise keep default
         if (parts.Length > 4) {
-            Currency.m_Blocks = uint.Parse(parts[4]);
+            if (parts[4].StartsWith("}")) {
+                string startEnd = parts[4].Substring(1);
+                startIsland = int.Parse(startEnd.Split(",")[0]);
+                // End island needs to be set carefully, as there could be trailing whitespace that disturbs parsing
+                if (!int.TryParse(startEnd.Split(",")[1].Trim(), out int endValue)){
+                    string cleanEE = new string(startEnd.Split(",")[1].Where(c => char.IsDigit(c)).ToArray());
+                    if (int.TryParse(cleanEE.Trim(), out endValue))
+                    {
+                        endIsland = endValue;
+                    } 
+                    else
+                    {
+                        endValue = 0;
+                    }
+                }
+                endIsland = endValue;
+            } else {
+                Currency.m_Blocks = uint.Parse(parts[4]);
+            }
         }
 
         for (int i = 0; i < islands.Length; i++)

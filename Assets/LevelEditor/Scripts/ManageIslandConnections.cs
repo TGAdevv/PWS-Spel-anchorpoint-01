@@ -73,7 +73,10 @@ public class ManageIslandConnections : MonoBehaviour
                 ConnectionSelected = -1;
 
         if (ConnectionSelected != -1)
-            Connections[ConnectionSelected].begin.GetComponent<TMP_Text>().text = Connections[ConnectionSelected].weight.ToString();
+        {
+            var conn = Connections[ConnectionSelected];
+            conn.begin.GetComponent<TMP_Text>().text = conn.weightOptions.Count > 0 ? "x" : conn.weight.ToString();
+        }
 
         if (Input.GetMouseButton(0) || Input.GetMouseButtonUp(0) || Time.frameCount % 5 == 0)
             RefreshLineRenderers();
@@ -99,7 +102,7 @@ public class ManageIslandConnections : MonoBehaviour
                 ConnectionSelected = -1;
                 continue;
             }
-            connection.begin.GetComponent<TMP_Text>().text = connection.weight.ToString();
+            connection.begin.GetComponent<TMP_Text>().text = connection.weightOptions.Count > 0 ? "x" : connection.weight.ToString();
             connection.lineRenderer.SetPositions(GenerateBezierConnection(connection.begin.position, connection.end.position, connection.end.parent.parent.parent.GetComponent<RectTransform>(), CurveRes));
         }
     }

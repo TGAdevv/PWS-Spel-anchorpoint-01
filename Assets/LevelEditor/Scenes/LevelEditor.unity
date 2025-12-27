@@ -3916,7 +3916,7 @@ AudioListener:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 713663152}
-  m_Enabled: 1
+  m_Enabled: 0
 --- !u!4 &713663156
 Transform:
   m_ObjectHideFlags: 0
@@ -10893,6 +10893,8 @@ MonoBehaviour:
   LoadScreenUI: {fileID: 1745015029}
   axisPrefab: {fileID: 4953790837173096716, guid: 8b50d00b1e9e2ac4cb909c0460a02e29, type: 3}
   currentLevel: 0
+  startIsland: -1
+  endIsland: -1
 --- !u!4 &1834600991
 Transform:
   m_ObjectHideFlags: 0
