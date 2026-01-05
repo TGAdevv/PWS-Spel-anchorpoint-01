@@ -253,7 +253,9 @@ public class LevelImporter : MonoBehaviour
                 }
                 endIsland = endValue;
             } else {
-                Currency.m_Blocks = uint.Parse(parts[4]);
+                if (!string.IsNullOrWhiteSpace(parts[4])) {
+                    Currency.m_Blocks = uint.Parse(parts[4]);
+                }
             }
         }
 
@@ -300,7 +302,11 @@ public class LevelImporter : MonoBehaviour
                     string[] weightsText = connectionParams[0].Split("?");
                     weights = new float[weightsText.Length];
                     for (int k = 0; k < weightsText.Length; k++)
-                        weights[k] = float.Parse(weightsText[k]);
+                    {
+                        if (weightsText[k].Trim() == "") continue;
+                        float addableWeight = float.Parse(weightsText[k].Trim());
+                        weights[k] = addableWeight;
+                    }
                 }
                 else
                     weight = float.Parse(connectionParams[0]);
