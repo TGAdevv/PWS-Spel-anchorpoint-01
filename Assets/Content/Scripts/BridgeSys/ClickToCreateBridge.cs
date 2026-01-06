@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 using System.Collections.Generic;
 
 public class ClickToCreateBridge : MonoBehaviour
@@ -10,10 +11,11 @@ public class ClickToCreateBridge : MonoBehaviour
     float targetBridgeActive = 0;
     float speed = 3;
 
-    public uint price;
+    public uint[] price;
 
     public Transform CameraCanvas;
     public GameObject MenuPricePrefab;
+    public GameObject MenuPriceVarPrefab;
 
     RectTransform rect;
     TMP_Text priceTXT;
@@ -29,17 +31,30 @@ public class ClickToCreateBridge : MonoBehaviour
             enabled = false;
         }
 
-        GameObject PurchaseBlock = Instantiate(MenuPricePrefab, CameraCanvas);
+        GameObject PurchaseBlock = Instantiate((price.Length == 1) ? MenuPricePrefab : MenuPriceVarPrefab, CameraCanvas);
         rect = PurchaseBlock.GetComponent<RectTransform>();
         priceTXT = PurchaseBlock.GetComponentInChildren<TMP_Text>();
 
-        priceTXT.text = price.ToString();
+        if (price.Length > 1)
+        {
+            TMP_Dropdown DropdownPrices = PurchaseBlock.GetComponent<TMP_Dropdown>();
+
+            TMP_Dropdown.OptionData[] optionData = new TMP_Dropdown.OptionData[price.Length];
+            for (int i = 0; i < price.Length; i++)
+                optionData[i] = new(price[i].ToString());
+
+            DropdownPrices.AddOptions(new List<TMP_Dropdown.OptionData>(optionData));
+        }
+
+        priceTXT.text = price[0].ToString();
 
         PricePoint = spline.SamplePointInCurve(spline.trTOta[Mathf.RoundToInt(spline.resolution * .5f)]) + spline.transform.position;
     }
     private void OnMouseDown()
     {
-        if (targetBridgeActive == 0 && Currency.m_Blocks < price)
+        uint _price = (price.Length == 1) ? price[0] : uint.Parse(priceTXT.text);
+
+        if (targetBridgeActive == 0 && GlobalVariables.m_Blocks < _price)
             return;
 
         EventSystem currentEventSys = EventSystem.current;
@@ -50,10 +65,10 @@ public class ClickToCreateBridge : MonoBehaviour
         if (results.Count > 0)
             return;
 
-            Currency.m_Blocks -= price;
+        GlobalVariables.m_Blocks -= _price;
 
         if (targetBridgeActive == 1)
-            Currency.m_Blocks += price * 2;
+            GlobalVariables.m_Blocks += _price * 2;
 
         targetBridgeActive = 1 - targetBridgeActive;
     }
@@ -76,7 +91,7 @@ public class ClickToCreateBridge : MonoBehaviour
 
         spline.percentage_transparent = 1 - bridgeActive;
 
-        Vector2 screenPoint = (Vector2)Camera.main.WorldToScreenPoint(PricePoint);
+        Vector2 screenPoint = Camera.main.WorldToScreenPoint(PricePoint);
         screenPoint = new Vector2(screenPoint.x / (float)Screen.width, screenPoint.y / (float)Screen.height);
 
         rect.anchorMax = screenPoint;

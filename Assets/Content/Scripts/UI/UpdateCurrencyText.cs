@@ -7,8 +7,8 @@ public class UpdateCurrencyText : MonoBehaviour
 
     private void Update()
     {
-        BuidingBlocksTXT.text = Currency.m_Blocks.ToString();
-        CoinsTXT.text = Currency.m_Coins.ToString();
-        DiamondsTXT.text = Currency.m_Diamonds.ToString();
+        BuidingBlocksTXT.text = GlobalVariables.m_Blocks.ToString();
+        CoinsTXT.text         = GlobalVariables.m_Coins.ToString();
+        DiamondsTXT.text      = GlobalVariables.m_Diamonds.ToString();
     }
 }

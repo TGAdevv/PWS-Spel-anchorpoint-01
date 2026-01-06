@@ -4,7 +4,9 @@ using UnityEngine.UI;
 enum Property
 {
     scale,
-    imageTransparency
+    imageTransparency,
+    xPivot,
+    yPivot
 };
 
 [System.Serializable]
@@ -39,17 +41,26 @@ public class AnimateUI : MonoBehaviour
         if (Duration == 0)
             return;
 
+        if (!rect && currentAnim.property != Property.imageTransparency)
+            rect = GetComponent<RectTransform>();
+        else if (!img)
+            img = GetComponent<Image>();
+
+        float t = Mathf.Clamp(Timer / Duration, 0, 1);
+
         switch (currentAnim.property)
         {
             case Property.scale:
-                if (!rect)
-                    rect = GetComponent<RectTransform>();
-                rect.localScale = Vector3.one * currentAnim.ScaleCurve.Evaluate(Timer / Duration);
+                rect.localScale = Vector3.one * currentAnim.ScaleCurve.Evaluate(t);
                 break;
             case Property.imageTransparency:
-                if (!img)
-                    img = GetComponent<Image>();
-                img.color = new Color(img.color.r, img.color.g, img.color.b, currentAnim.ScaleCurve.Evaluate(Timer / Duration));
+                img.color = new Color(img.color.r, img.color.g, img.color.b, currentAnim.ScaleCurve.Evaluate(t));
+                break;
+            case Property.xPivot:
+                rect.pivot = new(currentAnim.ScaleCurve.Evaluate(t), rect.pivot.y);
+                break;
+            case Property.yPivot:
+                rect.pivot = new(rect.pivot.x, currentAnim.ScaleCurve.Evaluate(t));
                 break;
             default:
                 break;
@@ -62,6 +73,7 @@ public class AnimateUI : MonoBehaviour
             AnimationTick();
         if (Timer > Duration && animations[currentID].DeactivateAfter) 
         {
+            AnimationTick();
             animations[currentID].DeactivateAfter.SetActive(false);
             Timer = -1;
         }

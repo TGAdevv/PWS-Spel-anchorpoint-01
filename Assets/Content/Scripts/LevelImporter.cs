@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using UnityEngine;
 using System.Linq;
+using UnityEngine.Events;
 
 public class LevelImporter : MonoBehaviour
 {
@@ -26,23 +27,25 @@ public class LevelImporter : MonoBehaviour
     Vector2 screenRes;
 
     public GameObject[] IslandTiles;
-    public AnchorToPosition anchorToPosition;
 
     Vector3 mapCenter = new(0,0,0);
 
     public Transform CameraCanvas;
-    public GameObject PriceUIPrefab;
+    public GameObject MenuPricePrefab;
+    public GameObject MenuPriceVarPrefab;
 
     public GameObject LoadScreenUI;
-
-    [Header("FOR EDITOR LEAVE NULL IN GAME SCENE")]
-    public GameObject axisPrefab;
 
     public int currentLevel = 0;
 
     // New fields for start and end islands, initialized to -1 (undefined)
     public int startIsland = -1;
     public int endIsland = -1;
+
+    public UnityEvent OnImport;
+
+    [Header("FOR EDITOR LEAVE NULL IN GAME SCENE")]
+    public GameObject axisPrefab;
 
     private void Start()
     {
@@ -110,17 +113,17 @@ public class LevelImporter : MonoBehaviour
         Islands.Add(island.transform);
         finished = true;
     }
-    void CreateBridge(Vector3[] splinePoints, float weight, Vector2Int index, float[] weights = null)
+    void CreateBridge(Vector3[] splinePoints, uint[] weight, Vector2Int index)
     {
         float unitSize = .3f * (screenRes.x / screenRes.y) * relativeLevelScaleMod;
 
         string weightOptionsTXT = "";
-        foreach (var item in weights)
+        foreach (var item in weight)
         {
             weightOptionsTXT += item + ", ";
         }
 
-        GameObject newBridge = new("Bridge " + index.x + ", " + index.y + ((weights.Length > 0) ? (" Weight options are: " + weightOptionsTXT) : ""));
+        GameObject newBridge = new("Bridge " + index.x + ", " + index.y + ((weight.Length > 0) ? (" Weight options are: " + weightOptionsTXT) : ""));
         newBridge.transform.parent = BridgesParent;
         newBridge.layer = LayerMask.NameToLayer("Bridge");
         newBridge.AddComponent<MeshCollider>();
@@ -159,8 +162,9 @@ public class LevelImporter : MonoBehaviour
         if (!axisPrefab)
         {
             ClickToCreateBridge clickToCreateBridge = newBridge.AddComponent<ClickToCreateBridge>();
-            clickToCreateBridge.price = (uint)weight;
-            clickToCreateBridge.MenuPricePrefab = PriceUIPrefab;
+            clickToCreateBridge.price = weight;
+            clickToCreateBridge.MenuPricePrefab = MenuPricePrefab;
+            clickToCreateBridge.MenuPriceVarPrefab = MenuPriceVarPrefab;
             clickToCreateBridge.CameraCanvas = CameraCanvas;
         }
 
@@ -214,7 +218,7 @@ public class LevelImporter : MonoBehaviour
                 startIsland = int.Parse(startEndParts[0].Trim());
                 //endisland needs to be set carefully, as there could be trailing whitespace that disturbs parsing
                 if (!int.TryParse(startEndParts[1].Trim(), out int endValue)){
-                    string cleanEE = new string(startEndParts[1].Where(c => char.IsDigit(c)).ToArray());
+                    string cleanEE = new(startEndParts[1].Where(c => char.IsDigit(c)).ToArray());
                     if (int.TryParse(cleanEE.Trim(), out endValue))
                     {
                         endIsland = endValue;
@@ -229,7 +233,7 @@ public class LevelImporter : MonoBehaviour
 
         } else {
             // parts[3] contains building blocks info 
-            Currency.m_Blocks = uint.Parse(parts[3]);
+            GlobalVariables.m_Blocks = uint.Parse(parts[3]);
             startIsland = -1; // Undefined
             endIsland = -1; // Undefined
         }
@@ -254,7 +258,7 @@ public class LevelImporter : MonoBehaviour
                 endIsland = endValue;
             } else {
                 if (!string.IsNullOrWhiteSpace(parts[4])) {
-                    Currency.m_Blocks = uint.Parse(parts[4]);
+                    GlobalVariables.m_Blocks = uint.Parse(parts[4]);
                 }
             }
         }
@@ -295,23 +299,22 @@ public class LevelImporter : MonoBehaviour
                     if (TestForOverflow(k)) yield return -1;
                     splinePoints[k] = new Vector3(float.Parse(connectionParams[k * 3 + 2]), float.Parse(connectionParams[k * 3 + 3]), float.Parse(connectionParams[k * 3 + 4])) * (PreviewMode ? relativeLevelScaleMod : 1);
                 }
-                float weight = 1;
-                float[] weights = new float[0];
+                uint[] weights = new uint[1];
                 if (connectionParams[0].Contains("?"))
                 {
                     string[] weightsText = connectionParams[0].Split("?");
-                    weights = new float[weightsText.Length];
+                    weights = new uint[weightsText.Length];
                     for (int k = 0; k < weightsText.Length; k++)
                     {
                         if (weightsText[k].Trim() == "") continue;
-                        float addableWeight = float.Parse(weightsText[k].Trim());
+                        uint addableWeight = uint.Parse(weightsText[k].Trim());
                         weights[k] = addableWeight;
                     }
                 }
                 else
-                    weight = float.Parse(connectionParams[0]);
+                    weights[0] = uint.Parse(connectionParams[0]);
 
-                CreateBridge(splinePoints, weight, new(i, j), weights);
+                CreateBridge(splinePoints, weights, new(i, j));
             }
             yield return new WaitForFixedUpdate();
         }
@@ -322,6 +325,9 @@ public class LevelImporter : MonoBehaviour
     {
         if (levelID >= levels.Length)
             levelID = levels.Length - 1;
+
+        GlobalVariables.m_Level = levelID;
+        OnImport.Invoke();
 
         LoadScreenUI.SetActive(true);
         LevelId = levelID;

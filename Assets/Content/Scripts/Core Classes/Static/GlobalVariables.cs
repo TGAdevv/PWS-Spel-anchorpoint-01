@@ -1,14 +1,24 @@
-public static class Currency
+public enum LevelGoal
+{
+    CONNECT_ALL_ISLANDS,
+    FIND_SHORTEST_ROUTE,
+    OPTIMIZE_PROCESS
+}
+
+public static class GlobalVariables
 {
     // ------------------------------
-    //  Currency->VARIABLES
+    //  GlobalVariables->VARIABLES
     // ------------------------------
     public static uint m_Coins = 0;
     public static uint m_Diamonds = 0;
     public static uint m_Blocks = 0;
+    public static int  m_Level = 0;
 
+    public static LevelGoal m_LevelGoal = 0;
+    
     // ------------------------------
-    //  Currency->FUNCTIONS
+    //  GlobalVariables->FUNCTIONS
     // ------------------------------
     public static bool PurchaseWithCoins(uint amount) 
     {
