@@ -17,6 +17,9 @@ public class TheoryText : MonoBehaviour
     [SerializeField] TMPro.TMP_Text Title;
     [SerializeField] TMPro.TMP_Text ChapterContent;
 
+    [Header("Optional - Leave NULL if not wanted")]
+    [SerializeField] GameObject NotifcationOBJ;
+
     public void Tick()
     {
         if (Chapters.Length <= currentChapter + 1)
@@ -28,6 +31,9 @@ public class TheoryText : MonoBehaviour
 
             Title.text          = Chapters[currentChapter].Title;
             ChapterContent.text = Chapters[currentChapter].ChapterContent;
+
+            if (NotifcationOBJ)
+                NotifcationOBJ.SetActive(true);
         }
     }
 }
