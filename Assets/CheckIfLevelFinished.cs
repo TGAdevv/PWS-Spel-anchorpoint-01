@@ -2,6 +2,14 @@ using UnityEngine;
 
 public class CheckIfLevelFinished : MonoBehaviour
 {
+    public GameObject LevelCompleet;
+    public AnimateUI LevelCompleetAnim;
+    public AnimateUI BackgroundAnim;
+    public AnimateUI ster1;
+    public AnimateUI ster2;
+    public AnimateUI ster3;
+    public AudioSource LevelCompleteSound;
+
     public struct GraphEdge
     {
         public uint weight;
@@ -63,5 +71,16 @@ public class CheckIfLevelFinished : MonoBehaviour
         }
 
         return true;
+    }
+
+    public void LevelFinished()
+    {
+        LevelCompleteSound.Play();
+        LevelCompleet.SetActive(true);
+        LevelCompleetAnim.PlayAnimation(0);
+        BackgroundAnim.PlayAnimation(0);
+        ster1.PlayAnimation(0);
+        ster2.PlayAnimation(0);
+        ster3.PlayAnimation(0);
     }
 }

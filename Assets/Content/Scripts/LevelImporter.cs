@@ -250,42 +250,28 @@ public class LevelImporter : MonoBehaviour
 
         } else {
             // parts[3] contains building blocks info 
-            GlobalVariables.m_Blocks = uint.Parse(parts[3]);
+            GlobalVariables.m_requiredBlocks = int.Parse(parts[3]);
+            GlobalVariables.m_Blocks = 0;
             startIsland = -1; // Undefined
             endIsland = -1; // Undefined
         }
 
         // Parse building blocks: fifth part if exists, otherwise keep default
         if (parts.Length > 4) {
-            if (parts[4].StartsWith("}")) {
-                string startEnd = parts[4].Substring(1);
-                startIsland = int.Parse(startEnd.Split(",")[0]);
-                // End island needs to be set carefully, as there could be trailing whitespace that disturbs parsing
-                if (!int.TryParse(startEnd.Split(",")[1].Trim(), out int endValue)){
-                    string cleanEE = new string(startEnd.Split(",")[1].Where(c => char.IsDigit(c)).ToArray());
-                    if (int.TryParse(cleanEE.Trim(), out endValue))
-                    {
-                        endIsland = endValue;
-                    } 
-                    else
-                    {
-                        endValue = 0;
-                    }
-                }
-                endIsland = endValue;
-            } else {
-                if (!string.IsNullOrWhiteSpace(parts[4])) {
-                    GlobalVariables.m_Blocks = uint.Parse(parts[4]);
-                }
+            if (!string.IsNullOrWhiteSpace(parts[4])) {
+                GlobalVariables.m_requiredBlocks = int.Parse(parts[4]);
+                GlobalVariables.m_Blocks = 0;
             }
         }
 
 
         // We know if there is a start- and end island
         // So we can now confidently figure out the level goal
-        if (level.Contains("?"))
+        if (level.Contains("?")){
             // Note -> ? in level code means variable weight
             GlobalVariables.m_LevelGoal = LevelGoal.OPTIMIZE_PROCESS;
+            GlobalVariables.m_Blocks = 9999;
+        }
         else if (startIsland != -1 && endIsland != -1)
             GlobalVariables.m_LevelGoal = LevelGoal.FIND_SHORTEST_ROUTE;
         else

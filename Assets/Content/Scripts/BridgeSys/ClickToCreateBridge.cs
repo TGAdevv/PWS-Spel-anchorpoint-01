@@ -54,9 +54,6 @@ public class ClickToCreateBridge : MonoBehaviour
     {
         uint _price = (price.Length == 1) ? price[0] : uint.Parse(priceTXT.text);
 
-        if (targetBridgeActive == 0 && GlobalVariables.m_Blocks < _price)
-            return;
-
         EventSystem currentEventSys = EventSystem.current;
         PointerEventData eventData = new(currentEventSys);
         eventData.position = Input.mousePosition;
@@ -65,10 +62,10 @@ public class ClickToCreateBridge : MonoBehaviour
         if (results.Count > 0)
             return;
 
-        GlobalVariables.m_Blocks -= _price;
+        GlobalVariables.m_Blocks += _price;
 
         if (targetBridgeActive == 1)
-            GlobalVariables.m_Blocks += _price * 2;
+            GlobalVariables.m_Blocks -= _price * 2;
 
         targetBridgeActive = 1 - targetBridgeActive;
     }

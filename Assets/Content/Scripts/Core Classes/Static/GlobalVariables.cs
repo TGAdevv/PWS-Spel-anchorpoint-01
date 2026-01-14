@@ -1,8 +1,8 @@
 public enum LevelGoal
 {
     CONNECT_ALL_ISLANDS,
-    FIND_SHORTEST_ROUTE,
-    OPTIMIZE_PROCESS
+    OPTIMIZE_PROCESS,
+    FIND_SHORTEST_ROUTE,  
 }
 
 public static class GlobalVariables
@@ -13,6 +13,7 @@ public static class GlobalVariables
     public static uint m_Coins = 0;
     public static uint m_Diamonds = 0;
     public static uint m_Blocks = 0;
+    public static int m_requiredBlocks = -1;
     public static int  m_Level = 0;
 
     public static LevelGoal m_LevelGoal = 0;
@@ -38,10 +39,7 @@ public static class GlobalVariables
     }
     public static bool PurchaseWithBlocks(uint amount)
     {
-        if (m_Blocks < amount)
-            return false;
-
-        m_Blocks -= amount;
+        m_Blocks += amount;
         return true;
     }
     // =======================================
