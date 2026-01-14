@@ -10887,14 +10887,17 @@ MonoBehaviour:
   - {fileID: 2895217417726338218, guid: 73085424f17455b4897218b41741570e, type: 3}
   - {fileID: 8859302302783315474, guid: e73fb1c7534f04a498c6f5a0cffb7f39, type: 3}
   - {fileID: 8914569841777822226, guid: 1b07c735ccfcc8e4180ce3cf385c4814, type: 3}
-  anchorToPosition: {fileID: 0}
   CameraCanvas: {fileID: 1909264286}
-  PriceUIPrefab: {fileID: 3517048720009562065, guid: beee0f17e26f4714cb39bc742ef8fac1, type: 3}
+  MenuPricePrefab: {fileID: 3517048720009562065, guid: beee0f17e26f4714cb39bc742ef8fac1, type: 3}
+  MenuPriceVarPrefab: {fileID: 9108944266141725765, guid: c5f9ed4daf040a94293cb721b64f8735, type: 3}
   LoadScreenUI: {fileID: 1745015029}
-  axisPrefab: {fileID: 4953790837173096716, guid: 8b50d00b1e9e2ac4cb909c0460a02e29, type: 3}
   currentLevel: 0
   startIsland: -1
   endIsland: -1
+  OnImported:
+    m_PersistentCalls:
+      m_Calls: []
+  axisPrefab: {fileID: 4953790837173096716, guid: 8b50d00b1e9e2ac4cb909c0460a02e29, type: 3}
 --- !u!4 &1834600991
 Transform:
   m_ObjectHideFlags: 0

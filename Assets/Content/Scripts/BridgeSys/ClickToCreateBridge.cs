@@ -13,7 +13,7 @@ public class ClickToCreateBridge : MonoBehaviour
 
     public uint[] price;
 
-    public Transform CameraCanvas;
+    public RectTransform CameraCanvas;
     public GameObject MenuPricePrefab;
     public GameObject MenuPriceVarPrefab;
 

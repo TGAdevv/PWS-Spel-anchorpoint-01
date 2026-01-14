@@ -30,9 +30,10 @@ public class LevelImporter : MonoBehaviour
 
     Vector3 mapCenter = new(0,0,0);
 
-    public Transform CameraCanvas;
+    public RectTransform CameraCanvas;
     public GameObject MenuPricePrefab;
     public GameObject MenuPriceVarPrefab;
+    public GameObject BasicWidget;
 
     public GameObject LoadScreenUI;
 
@@ -42,15 +43,22 @@ public class LevelImporter : MonoBehaviour
     public int startIsland = -1;
     public int endIsland = -1;
 
-    public UnityEvent OnImport;
+    public UnityEvent OnImported;
 
     [Header("FOR EDITOR LEAVE NULL IN GAME SCENE")]
     public GameObject axisPrefab;
 
     private void Start()
     {
+        // Simple static class for adding in-scene widgets
+        SceneWidgets.Init(Camera.main, CameraCanvas);
+
         if (!axisPrefab)
             ImportLevel(currentLevel);
+    }
+    private void Update()
+    {
+        SceneWidgets.Tick();
     }
 
     bool TestForOverflow(int iteration, [CallerLineNumber] int codeLine = 0)
@@ -159,13 +167,19 @@ public class LevelImporter : MonoBehaviour
 
         newSpline.splinePoints = splineTransforms;
 
-        if (!axisPrefab)
+        if (!axisPrefab && (GlobalVariables.m_LevelGoal != LevelGoal.OPTIMIZE_PROCESS || weight.Length > 1))
         {
             ClickToCreateBridge clickToCreateBridge = newBridge.AddComponent<ClickToCreateBridge>();
             clickToCreateBridge.price = weight;
             clickToCreateBridge.MenuPricePrefab = MenuPricePrefab;
             clickToCreateBridge.MenuPriceVarPrefab = MenuPriceVarPrefab;
             clickToCreateBridge.CameraCanvas = CameraCanvas;
+        }
+        if (GlobalVariables.m_LevelGoal == LevelGoal.OPTIMIZE_PROCESS && weight.Length == 1)
+        {
+            newSpline.GenerateSpline();
+            Vector3 BridgeWorldPoint = newSpline.SamplePointInCurve(newSpline.trTOta[Mathf.RoundToInt(newSpline.resolution * .5f)]) + newSpline.transform.position;
+            SceneWidgets.AddNew(MenuPricePrefab, BridgeWorldPoint, weight[0].ToString());
         }
 
         Bridges.Add(newSpline);
@@ -182,6 +196,9 @@ public class LevelImporter : MonoBehaviour
         mapCenter = Vector3.zero;
 
         //First wipe everything from the current scene
+
+        SceneWidgets.ClearAll();
+
         for (int i = 0; i < CameraCanvas.childCount; i++)
             Destroy(CameraCanvas.GetChild(i).gameObject);
         foreach (var island in Islands)
@@ -263,6 +280,17 @@ public class LevelImporter : MonoBehaviour
             }
         }
 
+
+        // We know if there is a start- and end island
+        // So we can now confidently figure out the level goal
+        if (level.Contains("?"))
+            // Note -> ? in level code means variable weight
+            GlobalVariables.m_LevelGoal = LevelGoal.OPTIMIZE_PROCESS;
+        else if (startIsland != -1 && endIsland != -1)
+            GlobalVariables.m_LevelGoal = LevelGoal.FIND_SHORTEST_ROUTE;
+        else
+            GlobalVariables.m_LevelGoal = LevelGoal.CONNECT_ALL_ISLANDS;
+
         for (int i = 0; i < islands.Length; i++)
         {
             string[] islandParams = islands[i].Split(",");
@@ -280,6 +308,12 @@ public class LevelImporter : MonoBehaviour
 
         if (!axisPrefab)
             transform.position = -mapCenter / islands.Length;
+
+        if (startIsland != -1 && endIsland != -1)
+        {
+            SceneWidgets.AddNew(BasicWidget, Islands[startIsland].transform.position, "Begin", Color.green);
+            SceneWidgets.AddNew(BasicWidget, Islands[endIsland].transform.position,   "Eind",  Color.red);
+        }
 
         for (int i = 0; i < Allconnections.Length; i++)
         {
@@ -327,11 +361,12 @@ public class LevelImporter : MonoBehaviour
             levelID = levels.Length - 1;
 
         GlobalVariables.m_Level = levelID;
-        OnImport.Invoke();
 
         LoadScreenUI.SetActive(true);
         LevelId = levelID;
         PreviewMode = previewMode;
         StartCoroutine(importLevel());
+
+        OnImported.Invoke();
     }
 }

@@ -57,6 +57,6 @@ public class OrbitalCamera : MonoBehaviour
         if (cam.orthographic)
             cam.orthographicSize -= Input.mouseScrollDelta.y * scaleSpeed;
         else
-            transform.localPosition += Vector3.forward * Input.mouseScrollDelta.y * scaleSpeed;
+            transform.localPosition += Input.mouseScrollDelta.y * scaleSpeed * Vector3.forward;
     }
 }

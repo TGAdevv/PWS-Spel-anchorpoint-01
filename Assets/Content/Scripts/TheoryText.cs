@@ -7,7 +7,10 @@ public class TheoryText : MonoBehaviour
     public struct Chapter
     {
         public string Title;
-        [TextArea(0, 25)] public string ChapterContent;
+
+        [TextArea(0, 25)] 
+        public string ChapterContent;
+
         public int SetAtLevel;
     }
 
