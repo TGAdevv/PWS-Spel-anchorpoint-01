@@ -3,14 +3,12 @@ using UnityEngine;
 public class CheckIfLevelFinished : MonoBehaviour
 {
     public GameObject LevelCompleet;
-    public GameObject ster1obj;
-    public GameObject ster2obj;
-    public GameObject ster3obj;
+    public GameObject ster1obj, ster2obj, ster3obj;
+
     public AnimateUI LevelCompleetAnim;
     public AnimateUI BackgroundAnim;
-    public AnimateUI ster1;
-    public AnimateUI ster2;
-    public AnimateUI ster3;
+    public AnimateUI ster1, ster2, ster3;
+
     public AudioSource LevelCompleteSound;
 
     public struct GraphEdge
@@ -53,6 +51,9 @@ public class CheckIfLevelFinished : MonoBehaviour
 
     public bool Check()
     {
+        if (ActiveGraph == null)
+            return true;
+
         switch (GlobalVariables.m_LevelGoal)
         {
             case LevelGoal.CONNECT_ALL_ISLANDS:
@@ -63,10 +64,6 @@ public class CheckIfLevelFinished : MonoBehaviour
             case LevelGoal.FIND_SHORTEST_ROUTE:
                 if (!HasRoute(0))
                     return false;
-                break;
-
-            case LevelGoal.OPTIMIZE_PROCESS:
-
                 break;
 
             default:
@@ -88,7 +85,7 @@ public class CheckIfLevelFinished : MonoBehaviour
         ster3obj.SetActive(false);
         switch (GlobalVariables.m_LevelGoal)
         {
-            case 0:
+            case LevelGoal.CONNECT_ALL_ISLANDS:
                 if (GlobalVariables.m_Blocks <= GlobalVariables.m_requiredBlocks)
                 {
                     ster3obj.SetActive(true);

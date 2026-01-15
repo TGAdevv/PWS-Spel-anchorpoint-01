@@ -44,6 +44,7 @@ public class LevelImporter : MonoBehaviour
     public int endIsland = -1;
 
     public UnityEvent OnImported;
+    public CheckIfLevelFinished LevelFinishedChecker;
 
     [Header("FOR EDITOR LEAVE NULL IN GAME SCENE")]
     public GameObject axisPrefab;

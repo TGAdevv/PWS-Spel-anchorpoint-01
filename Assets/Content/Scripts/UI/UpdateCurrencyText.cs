@@ -7,7 +7,8 @@ public class UpdateCurrencyText : MonoBehaviour
 
     private void Update()
     {
-        BuidingBlocksTXT.text = GlobalVariables.m_Blocks.ToString();
+        uint blocks = GlobalVariables.m_Blocks;
+        BuidingBlocksTXT.text = (blocks > 999) ? "-" : blocks.ToString();
         CoinsTXT.text         = GlobalVariables.m_Coins.ToString();
         DiamondsTXT.text      = GlobalVariables.m_Diamonds.ToString();
     }
