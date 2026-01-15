@@ -5004,6 +5004,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   LevelCompleet: {fileID: 740440847}
+  ster1obj: {fileID: 695508640}
+  ster2obj: {fileID: 1039329601}
+  ster3obj: {fileID: 1828809942}
   LevelCompleetAnim: {fileID: 740440851}
   BackgroundAnim: {fileID: 1489551737}
   ster1: {fileID: 695508644}
