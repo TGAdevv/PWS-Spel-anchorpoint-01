@@ -172,6 +172,8 @@ public class LevelImporter : MonoBehaviour
         {
             ClickToCreateBridge clickToCreateBridge = newBridge.AddComponent<ClickToCreateBridge>();
             clickToCreateBridge.price = weight;
+            clickToCreateBridge.startIsland = index.x;
+            clickToCreateBridge.endIsland = index.y;
             clickToCreateBridge.MenuPricePrefab = MenuPricePrefab;
             clickToCreateBridge.MenuPriceVarPrefab = MenuPriceVarPrefab;
             clickToCreateBridge.CameraCanvas = CameraCanvas;
@@ -184,6 +186,7 @@ public class LevelImporter : MonoBehaviour
         }
 
         Bridges.Add(newSpline);
+        GlobalVariables.bridgeObjects.Add(newBridge);
     }
 
     int LevelId = 0;
@@ -208,6 +211,9 @@ public class LevelImporter : MonoBehaviour
             Destroy(bridge.gameObject);
         Islands = new();
         Bridges = new();
+        GlobalVariables.possibleBridges = new string[0];
+        GlobalVariables.m_startIsland = -1;
+        GlobalVariables.m_endIsland = -1;
 
         string level = levels[LevelId];
 
@@ -216,9 +222,21 @@ public class LevelImporter : MonoBehaviour
 
         // Parse islands: first part, split by ';'
         string[] islands = parts[0].Split(";");
-
+        GlobalVariables.m_totalIslands = islands.Length;
         // Parse connections: second part, split by '/'
-        string[] Allconnections = parts[1].Split("/");
+        string[] connectionsPerIsland = parts[1].Split("/");
+        //add all start and endpoints for connectins to global variables for easy access
+        for (int i = 0; i < connectionsPerIsland.Length; i++)
+        {
+            string[] currentIslandConnections = connectionsPerIsland[i].Split(";");
+            for (int j = 0; j < currentIslandConnections.Length; j++)
+            {
+                if (currentIslandConnections[j].Trim() == "")
+                    continue;
+                string targetIsland = currentIslandConnections[j].Split(",")[1].Trim();
+                GlobalVariables.possibleBridges = GlobalVariables.possibleBridges.Append(i + "," + targetIsland + ",0").ToArray();
+            }
+        }
 
         // Parse screen resolution: third part, split by ','
         string[] screenResComponents = parts[2].Split(",");
@@ -247,6 +265,8 @@ public class LevelImporter : MonoBehaviour
                     }
                 }
                 endIsland = endValue;
+                GlobalVariables.m_startIsland = startIsland;
+                GlobalVariables.m_endIsland = endIsland;
             }
 
         } else {
@@ -302,10 +322,10 @@ public class LevelImporter : MonoBehaviour
             SceneWidgets.AddNew(BasicWidget, Islands[endIsland].transform.position,   "Eind",  Color.red);
         }
 
-        for (int i = 0; i < Allconnections.Length; i++)
+        for (int i = 0; i < connectionsPerIsland.Length; i++)
         {
             if (TestForOverflow(i)) yield return -1;
-            string[] connections = Allconnections[i].Split(";");
+            string[] connections = connectionsPerIsland[i].Split(";");
 
             for (int j = 0; j < connections.Length; j++)
             {
@@ -313,7 +333,7 @@ public class LevelImporter : MonoBehaviour
                 string[] connectionParams = connections[j].Split(",");
                 if (connectionParams.Length < 6)
                     continue;
-
+                int targetIsland = int.Parse(connectionParams[1].Trim());
                 Vector3[] splinePoints = new Vector3[Mathf.FloorToInt((connectionParams.Length - 2) / 3f)];
                 for (int k = 0; k < splinePoints.Length; k++)
                 {
@@ -335,7 +355,7 @@ public class LevelImporter : MonoBehaviour
                 else
                     weights[0] = uint.Parse(connectionParams[0]);
 
-                CreateBridge(splinePoints, weights, new(i, j));
+                CreateBridge(splinePoints, weights, new(i, targetIsland));
             }
             yield return new WaitForFixedUpdate();
         }

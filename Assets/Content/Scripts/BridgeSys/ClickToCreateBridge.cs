@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using System;
 
 public class ClickToCreateBridge : MonoBehaviour
 {
@@ -12,6 +13,8 @@ public class ClickToCreateBridge : MonoBehaviour
     float speed = 3;
 
     public uint[] price;
+    public int startIsland;
+    public int endIsland;
 
     public RectTransform CameraCanvas;
     public GameObject MenuPricePrefab;
@@ -53,7 +56,6 @@ public class ClickToCreateBridge : MonoBehaviour
     private void OnMouseDown()
     {
         uint _price = (price.Length == 1) ? price[0] : uint.Parse(priceTXT.text);
-
         EventSystem currentEventSys = EventSystem.current;
         PointerEventData eventData = new(currentEventSys);
         eventData.position = Input.mousePosition;
@@ -68,6 +70,30 @@ public class ClickToCreateBridge : MonoBehaviour
             GlobalVariables.m_Blocks -= _price * 2;
 
         targetBridgeActive = 1 - targetBridgeActive;
+
+        //check for bridge in globalvariables and update accordingly
+        if (targetBridgeActive == 1)
+        {
+            for (int i = 0; i < GlobalVariables.possibleBridges.Length; i++)
+            {
+                if (GlobalVariables.possibleBridges[i] == startIsland + "," + endIsland + ",0" || GlobalVariables.possibleBridges[i] == endIsland + "," + startIsland + ",0")
+                {
+                    GlobalVariables.possibleBridges[i] = startIsland + "," + endIsland + ",1";
+                    return;
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < GlobalVariables.possibleBridges.Length; i++)
+            {
+                if (GlobalVariables.possibleBridges[i] == startIsland + "," + endIsland + ",1" || GlobalVariables.possibleBridges[i] == endIsland + "," + startIsland + ",1")
+                {
+                    GlobalVariables.possibleBridges[i] = startIsland + "," + endIsland + ",0";
+                    return;
+                }
+            }
+        }
     }
 
     float timer = 0;

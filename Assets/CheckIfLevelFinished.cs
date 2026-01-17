@@ -1,4 +1,7 @@
 using UnityEngine;
+using System.Collections.Generic;
+using System.Linq;
+using System;
 
 public class CheckIfLevelFinished : MonoBehaviour
 {
@@ -38,43 +41,90 @@ public class CheckIfLevelFinished : MonoBehaviour
 
     public GraphVertex[] ActiveGraph;
 
-    bool HasRoute(uint index)
-    {
-        for (int i = 0; i < ActiveGraph[index].connections.Length; i++)
-        {
-            if (ActiveGraph[index].connections[i].connectTo == ActiveGraph.Length - 1)
-                return true;
-            return HasRoute(ActiveGraph[index].connections[i].connectTo);
-        }
-        return false;
-    }
-
     public bool Check()
     {
-        if (ActiveGraph == null)
-            return true;
-
-        switch (GlobalVariables.m_LevelGoal)
+        //do not do this if level goal is optimize process
+        if (GlobalVariables.m_LevelGoal != LevelGoal.OPTIMIZE_PROCESS)
         {
-            case LevelGoal.CONNECT_ALL_ISLANDS:
-                for (int i = 0; i < ActiveGraph.Length; i++)
-                    if (ActiveGraph[i].connections.Length == 0) return false;
-                break;
+            string[] activeBridges = new string[0];
+            //find active bridges
+            for (int i = 0; i < GlobalVariables.possibleBridges.Length; i++)
+            {
+                if (GlobalVariables.possibleBridges[i].EndsWith(",1"))
+                {
+                    //remove the ,1 at the end
+                    string simplifiedBridge = GlobalVariables.possibleBridges[i].Substring(0, GlobalVariables.possibleBridges[i].Length - 2);
+                    activeBridges = activeBridges.Append(simplifiedBridge).ToArray();
+                }   
+            }
+        
+            //Build an adjacency list for all islands
+            Dictionary<int, List<int>> adjacency = new Dictionary<int, List<int>>();
+            //Initialize adjacency list
+            for (int i = 0; i < GlobalVariables.m_totalIslands; i++)
+            {
+                adjacency[i] = new List<int>();
+            }
 
-            case LevelGoal.FIND_SHORTEST_ROUTE:
-                if (!HasRoute(0))
-                    return false;
-                break;
+            //Populate adjacency list from activeBridges
+            foreach (string bridge in activeBridges)
+            {
+                string[] parts = bridge.Split(',');
+                int start = int.Parse(parts[0]);
+                int end = int.Parse(parts[1]);
+            //Add connections in both directions
+            adjacency[start].Add(end);
+            adjacency[end].Add(start);
+            }
+            //Use depth first search (DFS)to traverse reachable islands
+            HashSet<int> visited = new HashSet<int>();
+    
+            void DFS(int island)
+            {
+                if (visited.Contains(island)) return;
+                visited.Add(island);
 
-            default:
-                break;
+                foreach (int neighbor in adjacency[island])
+                {
+                    DFS(neighbor);
+                }
+            }
+            switch (GlobalVariables.m_LevelGoal)
+            {
+                case LevelGoal.CONNECT_ALL_ISLANDS:
+                    // Start DFS from any island (we use island 0)
+                    DFS(0);
+                    // Check if all islands were visited
+                    if (visited.Count == GlobalVariables.m_totalIslands){
+                        return true;
+                    } else{
+                        return false;
+                    }
+
+                case LevelGoal.FIND_SHORTEST_ROUTE:
+                    //start DFS from start island
+                    DFS(GlobalVariables.m_startIsland);
+                    //check if end island is visited
+                    if (visited.Contains(GlobalVariables.m_endIsland)){
+                        return true;
+                    } else{
+                        return false;
+                    }
+            }
+        
+        } else{ //if level goal is optimize process, level is always finished for now, needs to change
+            return true;
         }
-
-        return true;
+        return false; //should never be called, but c# is wonky
     }
 
     public void LevelFinished()
     {
+        if (!Check())
+        {
+            Debug.Log("Level not finished yet");
+            return;
+        }
         LevelCompleteSound.Play();
         LevelCompleet.SetActive(true);
         LevelCompleetAnim.PlayAnimation(0);
