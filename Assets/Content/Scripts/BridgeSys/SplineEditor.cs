@@ -167,7 +167,7 @@ public class SplineEditor : MonoBehaviour
             if (t > AngleFallof && AngleFallof > 0)
                 offset = Vector3.Slerp(offset, new Vector3(Mathf.Cos(endAngle), 0, Mathf.Sin(endAngle)), (t - 1 + AngleFallof) / AngleFallof);
 
-            Vector3 _bridgeheight = Vector3.up * bridgeHeight * Mathf.Clamp(1 + pillarFillerArea - Mathf.Abs(Mathf.Sin(Mathf.PI * t * pillarCount)), 0, 1);
+            Vector3 _bridgeheight = bridgeHeight * Mathf.Clamp(1 + pillarFillerArea - Mathf.Abs(Mathf.Sin(Mathf.PI * t * pillarCount)), 0, 1) * Vector3.up;
 
             vertices.Add(p + offset * bridgeWidth);
             vertices.Add(p - offset * bridgeWidth);

@@ -22,7 +22,7 @@ public static class GlobalVariables
     public static string[] possibleBridges = new string[0];
     public static int m_startIsland = -1;
     public static int m_endIsland = -1;
-    public static List<GameObject> bridgeObjects = new List<GameObject>();
+    public static List<GameObject> bridgeObjects = new();
     public static LevelGoal m_LevelGoal = 0;
     
     // ------------------------------

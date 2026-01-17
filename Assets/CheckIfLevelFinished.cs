@@ -97,9 +97,8 @@ public class CheckIfLevelFinished : MonoBehaviour
                     // Check if all islands were visited
                     if (visited.Count == GlobalVariables.m_totalIslands){
                         return true;
-                    } else{
-                        return false;
                     }
+                    return false;
 
                 case LevelGoal.FIND_SHORTEST_ROUTE:
                     //start DFS from start island
@@ -107,15 +106,14 @@ public class CheckIfLevelFinished : MonoBehaviour
                     //check if end island is visited
                     if (visited.Contains(GlobalVariables.m_endIsland)){
                         return true;
-                    } else{
-                        return false;
                     }
+                    return false;
             }
         
-        } else{ //if level goal is optimize process, level is always finished for now, needs to change
-            return true;
-        }
-        return false; //should never be called, but c# is wonky
+        } 
+        
+        //if level goal is optimize process, level is always finished for now, needs to change
+        return true;
     }
 
     public void LevelFinished()

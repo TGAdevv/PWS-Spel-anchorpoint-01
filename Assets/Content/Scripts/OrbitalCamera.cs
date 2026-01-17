@@ -9,6 +9,11 @@ public class OrbitalCamera : MonoBehaviour
     public float smoothTime;
     public float scaleSpeed;
 
+    [Range(0, 50)]
+    public int minZoom = 5;
+    [Range(100, 300)]
+    public int maxZoom = 220;
+
     Vector2 curAngle = new(10, 0);
     Vector2 AngleVel = new(10, 0);
 
@@ -58,5 +63,7 @@ public class OrbitalCamera : MonoBehaviour
             cam.orthographicSize -= Input.mouseScrollDelta.y * scaleSpeed;
         else
             transform.localPosition += Input.mouseScrollDelta.y * scaleSpeed * Vector3.forward;
+
+        cam.orthographicSize = Mathf.Clamp(cam.orthographicSize, minZoom, maxZoom);
     }
 }

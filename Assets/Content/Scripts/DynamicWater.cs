@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class DynamicWater : MonoBehaviour
 {
-    [SerializeField] Material normalMap;
+    [SerializeField] Material WaterMaterial;
 
     public float windDir;
     public float windSpeed;
@@ -10,6 +10,6 @@ public class DynamicWater : MonoBehaviour
     private void Update()
     {
         //Change texture offset (of albedo, normal, etc) to mimic moving water
-        normalMap.mainTextureOffset += Time.deltaTime * windSpeed * new Vector2(Mathf.Cos(windDir), Mathf.Sin(windDir));
+        WaterMaterial.mainTextureOffset += Time.deltaTime * windSpeed * new Vector2(Mathf.Cos(windDir), Mathf.Sin(windDir));
     }
 }

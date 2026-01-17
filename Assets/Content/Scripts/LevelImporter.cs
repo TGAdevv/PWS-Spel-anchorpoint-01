@@ -88,7 +88,7 @@ public class LevelImporter : MonoBehaviour
     {
         return Instantiate(
                     //TEMP! Should not be 0 (but the tile actually needed)
-                    IslandTiles[Mathf.RoundToInt(Random.Range(0.0f, 4.0f))],
+                    IslandTiles[Random.Range(0, IslandTiles.Length)],
                     island.transform.position + new Vector3(i - (size.x - 1) * .5f, 0, j - (size.y - 1) * .5f) * unitSize,
                     Quaternion.identity,
                     island.transform);
@@ -225,7 +225,9 @@ public class LevelImporter : MonoBehaviour
         GlobalVariables.m_totalIslands = islands.Length;
         // Parse connections: second part, split by '/'
         string[] connectionsPerIsland = parts[1].Split("/");
-        //add all start and endpoints for connectins to global variables for easy access
+
+        // Add all start and endpoints for connectins to global variables for easy access
+        List<string> possibleBridges = new(connectionsPerIsland.Length * 3);
         for (int i = 0; i < connectionsPerIsland.Length; i++)
         {
             string[] currentIslandConnections = connectionsPerIsland[i].Split(";");
@@ -234,9 +236,10 @@ public class LevelImporter : MonoBehaviour
                 if (currentIslandConnections[j].Trim() == "")
                     continue;
                 string targetIsland = currentIslandConnections[j].Split(",")[1].Trim();
-                GlobalVariables.possibleBridges = GlobalVariables.possibleBridges.Append(i + "," + targetIsland + ",0").ToArray();
+                possibleBridges.Add(i + "," + targetIsland + ",0");
             }
         }
+        GlobalVariables.possibleBridges = possibleBridges.ToArray();
 
         // Parse screen resolution: third part, split by ','
         string[] screenResComponents = parts[2].Split(",");
