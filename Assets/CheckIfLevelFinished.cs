@@ -72,9 +72,9 @@ public class CheckIfLevelFinished : MonoBehaviour
                 string[] parts = bridge.Split(',');
                 int start = int.Parse(parts[0]);
                 int end = int.Parse(parts[1]);
-            //Add connections in both directions
-            adjacency[start].Add(end);
-            adjacency[end].Add(start);
+                //Add connections in both directions
+                adjacency[start].Add(end);
+                adjacency[end].Add(start);
             }
             //Use depth first search (DFS)to traverse reachable islands
             HashSet<int> visited = new HashSet<int>();
@@ -111,8 +111,82 @@ public class CheckIfLevelFinished : MonoBehaviour
             }
         
         } 
-        
-        //if level goal is optimize process, level is always finished for now, needs to change
+        //for optimize process, we need to know all possible bridges
+        string[] bridges = new string[0];
+        for (int i = 0; i < GlobalVariables.possibleBridges.Length; i++)
+        {
+            bridges = bridges.Append(GlobalVariables.possibleBridges[i].Substring(0, GlobalVariables.possibleBridges[i].Length - 1)).ToArray();
+        }
+        //build adjacency list
+        Dictionary<int, List<List<int>>> defaultAdjacentIslands = new Dictionary<int, List<List<int>>>();
+        Dictionary<int, int> currentIslandWeight = new Dictionary<int, int>();
+        Dictionary<int, int> islandWeightIfVisitedViaMultipleChoice = new Dictionary<int, int>();
+        for (int i = 0; i < GlobalVariables.m_totalIslands; i++)
+            {
+                defaultAdjacentIslands[i] = new List<List<int>>();
+                currentIslandWeight[i] = 9999;
+                islandWeightIfVisitedViaMultipleChoice[i] = 9999;
+            }
+        foreach (string bridge in bridges)
+        {
+            string[] parts = bridge.Split(',');
+            int start = int.Parse(parts[0]);
+            int end = int.Parse(parts[1]);
+            int weight = int.Parse(parts[2]);
+            Debug.Log(start + " to " + end + " with weight " + weight);
+            //Add connections in both directions
+            defaultAdjacentIslands[start].Add(new List<int> { end, weight});
+            defaultAdjacentIslands[end].Add(new List<int> { start, weight});
+        }
+        void WeightedDFS(int island, int weightToAdd, bool beenPastInput = false)
+        {
+            int currentWeight = currentIslandWeight[island];
+            bool beenPast = beenPastInput;
+            if (island == GlobalVariables.m_startIsland) 
+            { 
+                if (currentIslandWeight[GlobalVariables.m_startIsland] == 0) return;
+                else
+                {
+                    currentIslandWeight[GlobalVariables.m_startIsland] = 0;
+                    islandWeightIfVisitedViaMultipleChoice[GlobalVariables.m_startIsland] = 0;
+                    Debug.Log(island + " updated to weight: 0 for all paths");
+                }
+            }
+            if (!beenPast) {
+                if (weightToAdd < currentWeight)
+                {
+                    currentIslandWeight[island] = weightToAdd;
+                    Debug.Log(island + " updated to weight: " + weightToAdd);
+                } else return;
+            } else {
+                if (weightToAdd < islandWeightIfVisitedViaMultipleChoice[island])
+                {
+                    islandWeightIfVisitedViaMultipleChoice[island] = weightToAdd;
+                    Debug.Log(island + " updated to weight (via mc): " + weightToAdd);
+                } else return;
+            }
+            currentWeight += weightToAdd;
+
+            foreach (List<int> neighbor in defaultAdjacentIslands[island])
+            {
+                if (GlobalVariables.m_multiplechoiceconnection == island + "," + neighbor[0] || GlobalVariables.m_multiplechoiceconnection == neighbor[0] + "," + island)
+                {
+                    beenPast = true;
+                }
+                if (beenPast)
+                    WeightedDFS(neighbor[0], islandWeightIfVisitedViaMultipleChoice[island] + neighbor[1], beenPast);
+                else
+                    WeightedDFS(neighbor[0], currentIslandWeight[island] + neighbor[1], beenPast);
+            }
+        }
+        WeightedDFS(GlobalVariables.m_startIsland, 0);
+        Debug.Log("Current island weight at start: " + currentIslandWeight[GlobalVariables.m_endIsland]);
+        Debug.Log("Island weight if visited via multiple choice at start: " + islandWeightIfVisitedViaMultipleChoice[GlobalVariables.m_endIsland]);
+        int maximumWeightNeeded = currentIslandWeight[GlobalVariables.m_endIsland] - islandWeightIfVisitedViaMultipleChoice[GlobalVariables.m_endIsland];
+        Debug.Log("Maximum weight needed for shortest path: " + maximumWeightNeeded);
+        if ((uint)maximumWeightNeeded < GlobalVariables.SelectedWeightOption)
+            return false;
+        GlobalVariables.neededweight = maximumWeightNeeded;
         return true;
     }
 
@@ -169,12 +243,23 @@ public class CheckIfLevelFinished : MonoBehaviour
                 break;
 
             case LevelGoal.OPTIMIZE_PROCESS:
-                ster1obj.SetActive(true);
-                ster2obj.SetActive(true);
-                ster3obj.SetActive(true);
-                ster1.PlayAnimation(0);
-                ster2.PlayAnimation(0);
-                ster3.PlayAnimation(0);
+                if (GlobalVariables.SelectedWeightOption == GlobalVariables.neededweight)
+                {
+                    ster3obj.SetActive(true);
+                    ster3.PlayAnimation(0);
+                }
+                
+                long offsetFromCorrectAnswer = GlobalVariables.neededweight / GlobalVariables.SelectedWeightOption;
+                if (offsetFromCorrectAnswer <= 0.75)
+                {
+                    ster2obj.SetActive(true);
+                    ster2.PlayAnimation(0);
+                }
+                if (offsetFromCorrectAnswer <= 0.5)
+                {
+                    ster1obj.SetActive(true);
+                    ster1.PlayAnimation(0);
+                }
                 break;
 
             default:

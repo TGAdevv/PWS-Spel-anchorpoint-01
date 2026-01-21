@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using NUnit.Framework;
+using Unity.Burst.CompilerServices;
 using UnityEngine;
 
 public enum LevelGoal
@@ -17,8 +19,12 @@ public static class GlobalVariables
     public static uint m_Diamonds = 0;
     public static uint m_Blocks = 0;
     public static int m_requiredBlocks = -1;
+    public static string m_multiplechoiceconnection = "";
     public static int  m_Level = 0;
     public static int m_totalIslands = 0;
+    public static int neededweight = 0;
+    public static uint SelectedWeightOption = 0;
+    public static string[] allWeights = new string[0];
     public static string[] possibleBridges = new string[0];
     public static int m_startIsland = -1;
     public static int m_endIsland = -1;

@@ -236,7 +236,15 @@ public class LevelImporter : MonoBehaviour
                 if (currentIslandConnections[j].Trim() == "")
                     continue;
                 string targetIsland = currentIslandConnections[j].Split(",")[1].Trim();
-                possibleBridges.Add(i + "," + targetIsland + ",0");
+                string weight = currentIslandConnections[j].Split(",")[0].Trim();
+                if (weight.Contains("?"))
+                {
+                    GlobalVariables.m_multiplechoiceconnection = i + "," + targetIsland;
+                    weight = "0";
+                    string[] options = weight.Split("?");
+                    GlobalVariables.allWeights = options;
+                }
+                possibleBridges.Add(i + "," + targetIsland + "," + weight + ",0");
             }
         }
         GlobalVariables.possibleBridges = possibleBridges.ToArray();

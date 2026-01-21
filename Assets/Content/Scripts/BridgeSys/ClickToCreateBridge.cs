@@ -11,6 +11,7 @@ public class ClickToCreateBridge : MonoBehaviour
     float bridgeActive = 0;
     float targetBridgeActive = 0;
     float speed = 3;
+    uint selectedPrice;
 
     public uint[] price;
     public int startIsland;
@@ -24,7 +25,12 @@ public class ClickToCreateBridge : MonoBehaviour
     TMP_Text priceTXT;
 
     Vector3 PricePoint;
-
+    void OnPriceChanged(int index)
+    {
+        selectedPrice = price[index];
+        GlobalVariables.SelectedWeightOption = selectedPrice;
+        Debug.Log("Selected price updated to: " + GlobalVariables.SelectedWeightOption);
+    }
     void Start()
     {
         spline = GetComponent<SplineEditor>();
@@ -40,6 +46,7 @@ public class ClickToCreateBridge : MonoBehaviour
 
         if (price.Length > 1)
         {
+            uint selectedPrice = price[0];
             TMP_Dropdown DropdownPrices = PurchaseBlock.GetComponent<TMP_Dropdown>();
 
             TMP_Dropdown.OptionData[] optionData = new TMP_Dropdown.OptionData[price.Length];
@@ -47,6 +54,8 @@ public class ClickToCreateBridge : MonoBehaviour
                 optionData[i] = new(price[i].ToString());
 
             DropdownPrices.AddOptions(new List<TMP_Dropdown.OptionData>(optionData));
+            selectedPrice = price[DropdownPrices.value];
+            DropdownPrices.onValueChanged.AddListener(OnPriceChanged);
         }
 
         priceTXT.text = price[0].ToString();
@@ -76,7 +85,9 @@ public class ClickToCreateBridge : MonoBehaviour
         {
             for (int i = 0; i < GlobalVariables.possibleBridges.Length; i++)
             {
-                if (GlobalVariables.possibleBridges[i] == startIsland + "," + endIsland + ",0" || GlobalVariables.possibleBridges[i] == endIsland + "," + startIsland + ",0")
+                string CurrentBridge = GlobalVariables.possibleBridges[i];
+                string WeightOfBridge = CurrentBridge.Split(',')[2];
+                if (GlobalVariables.possibleBridges[i] == startIsland + "," + endIsland + "," + WeightOfBridge + ",0" || GlobalVariables.possibleBridges[i] == endIsland + "," + startIsland + "," + WeightOfBridge + ",0")
                 {
                     GlobalVariables.possibleBridges[i] = startIsland + "," + endIsland + ",1";
                     return;
@@ -87,9 +98,11 @@ public class ClickToCreateBridge : MonoBehaviour
         {
             for (int i = 0; i < GlobalVariables.possibleBridges.Length; i++)
             {
-                if (GlobalVariables.possibleBridges[i] == startIsland + "," + endIsland + ",1" || GlobalVariables.possibleBridges[i] == endIsland + "," + startIsland + ",1")
+                string CurrentBridge = GlobalVariables.possibleBridges[i];
+                string WeightOfBridge = CurrentBridge.Split(',')[2];
+                if (GlobalVariables.possibleBridges[i] == startIsland + "," + endIsland + "," + WeightOfBridge + ",1" || GlobalVariables.possibleBridges[i] == endIsland + "," + startIsland + "," + WeightOfBridge + ",1")
                 {
-                    GlobalVariables.possibleBridges[i] = startIsland + "," + endIsland + ",0";
+                    GlobalVariables.possibleBridges[i] = startIsland + "," + endIsland + "," + WeightOfBridge + ",0";
                     return;
                 }
             }
