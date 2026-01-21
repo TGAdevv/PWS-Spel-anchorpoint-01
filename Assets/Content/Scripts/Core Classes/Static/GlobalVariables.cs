@@ -15,21 +15,29 @@ public static class GlobalVariables
     // ------------------------------
     //  GlobalVariables->VARIABLES
     // ------------------------------
+
+    // UI Variables
     public static uint m_Coins = 0;
-    public static uint m_Diamonds = 0;
     public static uint m_Blocks = 0;
-    public static int m_requiredBlocks = -1;
-    public static string m_multiplechoiceconnection = "";
-    public static int  m_Level = 0;
-    public static int m_totalIslands = 0;
-    public static int neededweight = 0;
-    public static uint SelectedWeightOption = 0;
-    public static string[] allWeights = new string[0];
-    public static string[] possibleBridges = new string[0];
+    public static int m_Level = 0;
+    public static LevelGoal m_LevelGoal = 0;
+
+    // Island Variables
     public static int m_startIsland = -1;
     public static int m_endIsland = -1;
+
+    // Bridge Variables
+    public static string[] allWeights = new string[0];
+    public static string[] possibleBridges = new string[0];
     public static List<GameObject> bridgeObjects = new();
-    public static LevelGoal m_LevelGoal = 0;
+    public static int m_totalIslands = 0;
+
+    // LevelCompleteCheck Variables
+    public static int m_requiredBlocks = -1;
+    public static string m_multiplechoiceconnection = "";
+    public static int neededweight = 0;
+    public static uint SelectedWeightOption = 0;
+
     
     // ------------------------------
     //  GlobalVariables->FUNCTIONS
@@ -40,14 +48,6 @@ public static class GlobalVariables
             return false;
 
         m_Coins -= amount;
-        return true;
-    }
-    public static bool PurchaseWithDiamonds(uint amount)
-    {
-        if (m_Diamonds < amount)
-            return false;
-
-        m_Diamonds -= amount;
         return true;
     }
     public static bool PurchaseWithBlocks(uint amount)

@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using System;
 
 public class CheckIfLevelFinished : MonoBehaviour
@@ -13,6 +14,10 @@ public class CheckIfLevelFinished : MonoBehaviour
     public AnimateUI ster1, ster2, ster3;
 
     public AudioSource LevelCompleteSound;
+    public TMP_Text CoinRewardTXT;
+
+    //                              0 Stars->0 coins, 1 Star->2 coins etc
+    uint[] CoinRewardPerStarCount = new uint[4] { 0, 2, 3, 5 };
 
     public struct GraphEdge
     {
@@ -197,73 +202,88 @@ public class CheckIfLevelFinished : MonoBehaviour
             Debug.Log("Level not finished yet");
             return;
         }
-        LevelCompleteSound.Play();
-        LevelCompleet.SetActive(true);
-        LevelCompleetAnim.PlayAnimation(0);
-        BackgroundAnim.PlayAnimation(0);
+
         // first disable star gameobjects, only make them appear when earned
         ster1obj.SetActive(false);
         ster2obj.SetActive(false);
         ster3obj.SetActive(false);
+
+        int starCount = 0;
+
         switch (GlobalVariables.m_LevelGoal)
         {
             case LevelGoal.CONNECT_ALL_ISLANDS:
-                if (GlobalVariables.m_Blocks <= GlobalVariables.m_requiredBlocks)
+                if (GlobalVariables.m_Blocks <= GlobalVariables.m_requiredBlocks + 2)
                 {
-                    ster3obj.SetActive(true);
-                    ster3.PlayAnimation(0);
+                    starCount = 1;
+                    ster1obj.SetActive(true);
+                    ster1.PlayAnimation(0);
                 }
                 if (GlobalVariables.m_Blocks <= GlobalVariables.m_requiredBlocks + 1)
                 {
+                    starCount = 2;
                     ster2obj.SetActive(true);
                     ster2.PlayAnimation(0);
                 }
-                if (GlobalVariables.m_Blocks <= GlobalVariables.m_requiredBlocks + 2)
+                if (GlobalVariables.m_Blocks <= GlobalVariables.m_requiredBlocks)
                 {
-                    ster1obj.SetActive(true);
-                    ster1.PlayAnimation(0);
+                    starCount = 3;
+                    ster3obj.SetActive(true);
+                    ster3.PlayAnimation(0);
                 }
                 break;
             case LevelGoal.FIND_SHORTEST_ROUTE:
-                if (GlobalVariables.m_Blocks <= GlobalVariables.m_requiredBlocks)
+                if (GlobalVariables.m_Blocks <= GlobalVariables.m_requiredBlocks + 2)
                 {
-                    ster3obj.SetActive(true);
-                    ster3.PlayAnimation(0);
+                    starCount = 1;
+                    ster1obj.SetActive(true);
+                    ster1.PlayAnimation(0);
                 }
                 if (GlobalVariables.m_Blocks <= GlobalVariables.m_requiredBlocks + 1)
                 {
+                    starCount = 2;
                     ster2obj.SetActive(true);
                     ster2.PlayAnimation(0);
                 }
-                if (GlobalVariables.m_Blocks <= GlobalVariables.m_requiredBlocks + 2)
+                if (GlobalVariables.m_Blocks <= GlobalVariables.m_requiredBlocks)
                 {
-                    ster1obj.SetActive(true);
-                    ster1.PlayAnimation(0);
+                    starCount = 3;
+                    ster3obj.SetActive(true);
+                    ster3.PlayAnimation(0);
                 }
                 break;
 
             case LevelGoal.OPTIMIZE_PROCESS:
-                if (GlobalVariables.SelectedWeightOption == GlobalVariables.neededweight)
+                float offsetFromCorrectAnswer = Mathf.Abs(GlobalVariables.neededweight - GlobalVariables.SelectedWeightOption) / GlobalVariables.neededweight;
+                if (offsetFromCorrectAnswer <= 0.5)
                 {
-                    ster3obj.SetActive(true);
-                    ster3.PlayAnimation(0);
+                    starCount = 1;
+                    ster1obj.SetActive(true);
+                    ster1.PlayAnimation(0);
                 }
-                
-                long offsetFromCorrectAnswer = GlobalVariables.neededweight / GlobalVariables.SelectedWeightOption;
                 if (offsetFromCorrectAnswer <= 0.75)
                 {
+                    starCount = 2;
                     ster2obj.SetActive(true);
                     ster2.PlayAnimation(0);
                 }
-                if (offsetFromCorrectAnswer <= 0.5)
+                if (GlobalVariables.SelectedWeightOption == GlobalVariables.neededweight)
                 {
-                    ster1obj.SetActive(true);
-                    ster1.PlayAnimation(0);
+                    starCount = 3;
+                    ster3obj.SetActive(true);
+                    ster3.PlayAnimation(0);
                 }
                 break;
 
             default:
                 break;
         }
+        CoinRewardTXT.text = CoinRewardPerStarCount[starCount].ToString();
+        GlobalVariables.m_Coins += CoinRewardPerStarCount[starCount];
+
+        LevelCompleteSound.Play();
+        LevelCompleet.SetActive(true);
+        LevelCompleetAnim.PlayAnimation(0);
+        BackgroundAnim.PlayAnimation(0);
     }
 }
