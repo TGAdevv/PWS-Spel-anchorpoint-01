@@ -67,7 +67,7 @@ public class SplineEditor : MonoBehaviour
     }
 
     bool realtimeMeshUpdate = false;
-    string alphabet = "abcdefghijklmnopqrstuvwxyz";
+    readonly string alphabet = "abcdefghijklmnopqrstuvwxyz";
 
     [ContextMenu("EDITOR/Add spline point", false, 2)]
     void AddSplinePoint() 
@@ -175,12 +175,12 @@ public class SplineEditor : MonoBehaviour
             vertices.Add(p - offset * bridgeWidth - _bridgeheight);
 
             if (i != 0) 
-                texCoordOffset += Vector2.up * Vector3.Distance(vertices[^4], vertices[^8]) * uv_scale;
+                texCoordOffset += uv_scale * Vector3.Distance(vertices[^4], vertices[^8]) * Vector2.up;
 
             texCoord.Add(texCoordOffset);
-            texCoord.Add(texCoordOffset + Vector2.right * Vector3.Distance(vertices[^4], vertices[^3]) * uv_scale);
-            texCoord.Add(texCoordOffset + Vector2.right * bridgeHeight * uv_scale);
-            texCoord.Add(texCoordOffset + Vector2.right * Vector3.Distance(vertices[^4], vertices[^3]) * uv_scale + Vector2.right * bridgeHeight * uv_scale);
+            texCoord.Add(texCoordOffset + uv_scale * Vector3.Distance(vertices[^4], vertices[^3]) * Vector2.right);
+            texCoord.Add(texCoordOffset + bridgeHeight * uv_scale * Vector2.right);
+            texCoord.Add(texCoordOffset + uv_scale * Vector3.Distance(vertices[^4], vertices[^3]) * Vector2.right + bridgeHeight * uv_scale * Vector2.right);
         }
         // Triangles
         for (int i = 0; i < resolution - 1; i++)

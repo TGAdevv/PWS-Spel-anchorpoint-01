@@ -42,20 +42,22 @@ public static class SceneWidgets
     }
 
     private static T CheckForComponent<T>(GameObject OBJ)
+        where T : Component
     {
         T Comp = OBJ.GetComponent<T>();
 
         if (Comp == null)
-            Debug.LogError("Widget Prefab \"" + OBJ.name + "\" Does Not Have " + typeof(T).FullName + " Component");
+            Debug.LogError("GameObject: \"" + OBJ.name + "\" Does Not Have " + typeof(T).FullName + " Component");
 
         return Comp;
     }
     private static T CheckForComponentInChildren<T>(GameObject OBJ)
+        where T : Component
     {
         T Comp = OBJ.GetComponentInChildren<T>();
 
         if (Comp == null)
-            Debug.LogError("Widget Prefab \"" + OBJ.name + "\" Does Not Have " + typeof(T).FullName + " Component");
+            Debug.LogError("GameObject: \"" + OBJ.name + "\" Does Not Have " + typeof(T).FullName + " Component");
 
         return Comp;
     }

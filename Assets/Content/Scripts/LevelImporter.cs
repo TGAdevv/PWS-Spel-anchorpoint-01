@@ -6,6 +6,7 @@ using System.Threading;
 using UnityEngine;
 using System.Linq;
 using UnityEngine.Events;
+using UnityEngine.InputSystem;
 
 public class LevelImporter : MonoBehaviour
 {
@@ -33,7 +34,11 @@ public class LevelImporter : MonoBehaviour
     public RectTransform CameraCanvas;
     public GameObject MenuPricePrefab;
     public GameObject MenuPriceVarPrefab;
+    public GameObject MenuPriceVarPrefabInputField;
     public GameObject BasicWidget;
+
+    public AudioClip buildBridge;
+    public AudioClip destroyBridge;
 
     public GameObject LoadScreenUI;
 
@@ -57,6 +62,7 @@ public class LevelImporter : MonoBehaviour
         if (!axisPrefab)
             ImportLevel(currentLevel);
     }
+
     private void Update()
     {
         SceneWidgets.Tick();
@@ -84,7 +90,7 @@ public class LevelImporter : MonoBehaviour
         ImportLevel(currentLevel);
     }
 
-    GameObject instantiateIsland(GameObject island, int i, int j, Vector2Int size, float unitSize)
+    GameObject InstantiateIsland(GameObject island, int i, int j, Vector2Int size, float unitSize)
     {
         return Instantiate(
                     //TEMP! Should not be 0 (but the tile actually needed)
@@ -110,7 +116,7 @@ public class LevelImporter : MonoBehaviour
         {
             for (int j = 0; j < size.y; j++)
             {
-                GameObject newTile = instantiateIsland(island, i, j, size, unitSize);
+                GameObject newTile = InstantiateIsland(island, i, j, size, unitSize);
                 newTile.transform.localScale *= unitSize;
 
                 if (curIndex % 3 == 0)
@@ -168,21 +174,62 @@ public class LevelImporter : MonoBehaviour
 
         newSpline.splinePoints = splineTransforms;
 
-        if (!axisPrefab && (GlobalVariables.m_LevelGoal != LevelGoal.OPTIMIZE_PROCESS || weight.Length > 1))
+        if (!axisPrefab && (GlobalVariables.m_LevelGoal != LevelGoal.OPTIMIZE_PROCESS))
         {
             ClickToCreateBridge clickToCreateBridge = newBridge.AddComponent<ClickToCreateBridge>();
-            clickToCreateBridge.price = weight;
+            clickToCreateBridge.price = weight[0];
             clickToCreateBridge.startIsland = index.x;
             clickToCreateBridge.endIsland = index.y;
             clickToCreateBridge.MenuPricePrefab = MenuPricePrefab;
-            clickToCreateBridge.MenuPriceVarPrefab = MenuPriceVarPrefab;
             clickToCreateBridge.CameraCanvas = CameraCanvas;
+
+            AudioSource BuildSFX = newBridge.AddComponent<AudioSource>();
+            BuildSFX.volume = .5f;
+            BuildSFX.clip = buildBridge;
+            clickToCreateBridge.buildBridgeSFX = BuildSFX;
+
+            AudioSource DestroySFX = newBridge.AddComponent<AudioSource>();
+            DestroySFX.volume = .5f;
+            DestroySFX.clip = destroyBridge;
+            clickToCreateBridge.destroyBridgeSFX = DestroySFX;
         }
-        if (GlobalVariables.m_LevelGoal == LevelGoal.OPTIMIZE_PROCESS && weight.Length == 1)
+
+        if (GlobalVariables.m_LevelGoal == LevelGoal.OPTIMIZE_PROCESS)
         {
             newSpline.GenerateSpline();
             Vector3 BridgeWorldPoint = newSpline.SamplePointInCurve(newSpline.trTOta[Mathf.RoundToInt(newSpline.resolution * .5f)]) + newSpline.transform.position;
-            SceneWidgets.AddNew(MenuPricePrefab, BridgeWorldPoint, weight[0].ToString());
+
+            switch (weight.Length)
+            {
+                case 1:
+                    // Length == 1 -> No input
+                    SceneWidgets.AddNew(MenuPricePrefab, BridgeWorldPoint, weight[0] + "u");
+                    break;
+                case 2:
+                    // Length == 2 -> Input field
+                    RectTransform inputFieldRect = SceneWidgets.AddNew(MenuPriceVarPrefabInputField, BridgeWorldPoint);
+
+                    TMPro.TMP_InputField tmpInputField = inputFieldRect.GetComponent<TMPro.TMP_InputField>();
+                    tmpInputField.onValueChanged.AddListener(delegate {
+                        if (tmpInputField.text.Length == 0) return;
+                        GlobalVariables.SelectedWeightOption = uint.Parse(tmpInputField.text); 
+                    });
+                    break;
+                default:
+                    // Length > 2 -> Multiple choice
+                    RectTransform dropdownFieldRect = SceneWidgets.AddNew(MenuPriceVarPrefab, BridgeWorldPoint);
+
+                    TMPro.TMP_Dropdown tmpDropdown = dropdownFieldRect.GetComponent<TMPro.TMP_Dropdown>();
+                    List<TMPro.TMP_Dropdown.OptionData> options = new();
+                    foreach (uint curWeight in weight)
+                        options.Add(new(curWeight + "u"));
+                    tmpDropdown.AddOptions(options);
+
+                    tmpDropdown.onValueChanged.AddListener(delegate {
+                        GlobalVariables.SelectedWeightOption = weight[tmpDropdown.value];
+                    });
+                    break;
+            }
         }
 
         Bridges.Add(newSpline);
@@ -211,7 +258,7 @@ public class LevelImporter : MonoBehaviour
             Destroy(bridge.gameObject);
         Islands = new();
         Bridges = new();
-        GlobalVariables.possibleBridges = new string[0];
+        GlobalVariables.possibleBridges = new Bridge[0];
         GlobalVariables.m_startIsland = -1;
         GlobalVariables.m_endIsland = -1;
 
@@ -227,7 +274,7 @@ public class LevelImporter : MonoBehaviour
         string[] connectionsPerIsland = parts[1].Split("/");
 
         // Add all start and endpoints for connectins to global variables for easy access
-        List<string> possibleBridges = new(connectionsPerIsland.Length * 3);
+        List<Bridge> possibleBridges = new();
         for (int i = 0; i < connectionsPerIsland.Length; i++)
         {
             string[] currentIslandConnections = connectionsPerIsland[i].Split(";");
@@ -239,12 +286,13 @@ public class LevelImporter : MonoBehaviour
                 string weight = currentIslandConnections[j].Split(",")[0].Trim();
                 if (weight.Contains("?"))
                 {
-                    GlobalVariables.m_multiplechoiceconnection = i + "," + targetIsland;
+                    GlobalVariables.m_multiplechoiceconnection = possibleBridges.Count;
                     weight = "0";
                     string[] options = weight.Split("?");
                     GlobalVariables.allWeights = options;
                 }
-                possibleBridges.Add(i + "," + targetIsland + "," + weight + ",0");
+                Bridge newBridge = new(i, int.Parse(targetIsland), uint.Parse(weight), false);
+                possibleBridges.Add(newBridge);
             }
         }
         GlobalVariables.possibleBridges = possibleBridges.ToArray();
@@ -258,7 +306,7 @@ public class LevelImporter : MonoBehaviour
         // Parse start and end islands: fourth part starts with '}', then optional 'start,end'
         string possibleStartEndPart = parts[3];
         if (possibleStartEndPart.StartsWith("}")) {
-            string startEnd = possibleStartEndPart.Substring(1); // Remove the '}'
+            string startEnd = possibleStartEndPart[1..]; // Remove the '}'
             if (!string.IsNullOrEmpty(startEnd))
             {
                 string[] startEndParts = startEnd.Split(",");
@@ -329,8 +377,8 @@ public class LevelImporter : MonoBehaviour
 
         if (startIsland != -1 && endIsland != -1)
         {
-            SceneWidgets.AddNew(BasicWidget, Islands[startIsland].transform.position, "Begin", Color.green);
-            SceneWidgets.AddNew(BasicWidget, Islands[endIsland].transform.position,   "Eind",  Color.red);
+            SceneWidgets.AddNew(BasicWidget, Islands[startIsland].transform.position, "Begin",new Color(.3f, .6f, .3f));
+            SceneWidgets.AddNew(BasicWidget, Islands[endIsland].transform.position,   "Eind", new Color(.6f, .3f, .3f));
         }
 
         for (int i = 0; i < connectionsPerIsland.Length; i++)

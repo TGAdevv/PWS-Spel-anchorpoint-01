@@ -3,68 +3,34 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using System;
+using UnityEngine.Events;
 
 public class CheckIfLevelFinished : MonoBehaviour
 {
-    public GameObject LevelCompleet;
-    public GameObject ster1obj, ster2obj, ster3obj;
+    public UnityEvent OnLevelNotFinished;
+    public ShowLevelFinishedAnimation ShowLevelFinishedAnimation;
 
-    public AnimateUI LevelCompleetAnim;
-    public AnimateUI BackgroundAnim;
-    public AnimateUI ster1, ster2, ster3;
+    [NonSerialized] public int currentLvlRoutes = 0;
 
-    public AudioSource LevelCompleteSound;
-    public TMP_Text CoinRewardTXT;
-
-    //                              0 Stars->0 coins, 1 Star->2 coins etc
-    uint[] CoinRewardPerStarCount = new uint[4] { 0, 2, 3, 5 };
-
-    public struct GraphEdge
-    {
-        public uint weight;
-        public uint connectTo;
-
-        public GraphEdge(uint _weight, uint _connectTo)
-        {
-            weight    = _weight;
-            connectTo = _connectTo;
-        }
-    }
-    public struct GraphVertex
-    {
-        public GraphEdge[] connections;
-
-        public GraphVertex(GraphEdge[] _connections)
-        {
-            connections = _connections;
-        }
-        public GraphVertex(GraphEdge _connection)
-        {
-            connections = new GraphEdge[1] { _connection };
-        }
-    }
-
-    public GraphVertex[] ActiveGraph;
+    public List<List<Vector3Int>> AllRoutes;
 
     public bool Check()
     {
         //do not do this if level goal is optimize process
         if (GlobalVariables.m_LevelGoal != LevelGoal.OPTIMIZE_PROCESS)
         {
-            string[] activeBridges = new string[0];
+            List<Bridge> activeBridges = new();
             //find active bridges
             for (int i = 0; i < GlobalVariables.possibleBridges.Length; i++)
             {
-                if (GlobalVariables.possibleBridges[i].EndsWith(",1"))
+                if (GlobalVariables.possibleBridges[i].activated)
                 {
-                    //remove the ,1 at the end
-                    string simplifiedBridge = GlobalVariables.possibleBridges[i].Substring(0, GlobalVariables.possibleBridges[i].Length - 2);
-                    activeBridges = activeBridges.Append(simplifiedBridge).ToArray();
+                    activeBridges.Add(GlobalVariables.possibleBridges[i]);
                 }   
             }
         
             //Build an adjacency list for all islands
-            Dictionary<int, List<int>> adjacency = new Dictionary<int, List<int>>();
+            Dictionary<int, List<int>> adjacency = new();
             //Initialize adjacency list
             for (int i = 0; i < GlobalVariables.m_totalIslands; i++)
             {
@@ -72,17 +38,14 @@ public class CheckIfLevelFinished : MonoBehaviour
             }
 
             //Populate adjacency list from activeBridges
-            foreach (string bridge in activeBridges)
+            foreach (var bridge in activeBridges)
             {
-                string[] parts = bridge.Split(',');
-                int start = int.Parse(parts[0]);
-                int end = int.Parse(parts[1]);
                 //Add connections in both directions
-                adjacency[start].Add(end);
-                adjacency[end].Add(start);
+                adjacency[bridge.startIsland].Add(bridge.endIsland);
+                adjacency[bridge.endIsland].Add(bridge.startIsland);
             }
             //Use depth first search (DFS)to traverse reachable islands
-            HashSet<int> visited = new HashSet<int>();
+            HashSet<int> visited = new();
     
             void DFS(int island)
             {
@@ -115,175 +78,161 @@ public class CheckIfLevelFinished : MonoBehaviour
                     return false;
             }
         
-        } 
-        //for optimize process, we need to know all possible bridges
-        string[] bridges = new string[0];
+        }
+
+        // Maximum weight of process with x with x=0
+        uint XTotalProcessWeight = uint.MaxValue;
+        uint MaximumWeight = 0;
+
+        // x = index of island it goes to, y = index of the bridge in possibleBridges array
+        List<Vector2Int>[] bridges = new List<Vector2Int>[GlobalVariables.m_totalIslands];
+
         for (int i = 0; i < GlobalVariables.possibleBridges.Length; i++)
         {
-            bridges = bridges.Append(GlobalVariables.possibleBridges[i].Substring(0, GlobalVariables.possibleBridges[i].Length - 1)).ToArray();
-        }
-        //build adjacency list
-        Dictionary<int, List<List<int>>> defaultAdjacentIslands = new Dictionary<int, List<List<int>>>();
-        Dictionary<int, int> currentIslandWeight = new Dictionary<int, int>();
-        Dictionary<int, int> islandWeightIfVisitedViaMultipleChoice = new Dictionary<int, int>();
-        for (int i = 0; i < GlobalVariables.m_totalIslands; i++)
-            {
-                defaultAdjacentIslands[i] = new List<List<int>>();
-                currentIslandWeight[i] = 9999;
-                islandWeightIfVisitedViaMultipleChoice[i] = 9999;
-            }
-        foreach (string bridge in bridges)
-        {
-            string[] parts = bridge.Split(',');
-            int start = int.Parse(parts[0]);
-            int end = int.Parse(parts[1]);
-            int weight = int.Parse(parts[2]);
-            Debug.Log(start + " to " + end + " with weight " + weight);
-            //Add connections in both directions
-            defaultAdjacentIslands[start].Add(new List<int> { end, weight});
-            defaultAdjacentIslands[end].Add(new List<int> { start, weight});
-        }
-        void WeightedDFS(int island, int weightToAdd, bool beenPastInput = false)
-        {
-            int currentWeight = currentIslandWeight[island];
-            bool beenPast = beenPastInput;
-            if (island == GlobalVariables.m_startIsland) 
-            { 
-                if (currentIslandWeight[GlobalVariables.m_startIsland] == 0) return;
-                else
-                {
-                    currentIslandWeight[GlobalVariables.m_startIsland] = 0;
-                    islandWeightIfVisitedViaMultipleChoice[GlobalVariables.m_startIsland] = 0;
-                    Debug.Log(island + " updated to weight: 0 for all paths");
-                }
-            }
-            if (!beenPast) {
-                if (weightToAdd < currentWeight)
-                {
-                    currentIslandWeight[island] = weightToAdd;
-                    Debug.Log(island + " updated to weight: " + weightToAdd);
-                } else return;
-            } else {
-                if (weightToAdd < islandWeightIfVisitedViaMultipleChoice[island])
-                {
-                    islandWeightIfVisitedViaMultipleChoice[island] = weightToAdd;
-                    Debug.Log(island + " updated to weight (via mc): " + weightToAdd);
-                } else return;
-            }
-            currentWeight += weightToAdd;
+            int startIsland = GlobalVariables.possibleBridges[i].startIsland;
+            int endIsland   = GlobalVariables.possibleBridges[i].endIsland;
 
-            foreach (List<int> neighbor in defaultAdjacentIslands[island])
+            if (bridges[startIsland] == null)
+                bridges[startIsland] = new();
+            bridges[startIsland].Add(new(endIsland, i));
+
+            if (bridges[endIsland] == null)
+                bridges[endIsland] = new();
+            bridges[endIsland].Add(new(startIsland, i));
+        }
+
+        int totalSearches = 0;
+
+        void WeightedDFS(int currentIsland, int prevIsland, uint totalWeight, bool containsX, List<Vector3Int> Route, bool firstSearch = false)
+        {
+            if (currentIsland == GlobalVariables.m_startIsland && !firstSearch)
+                return;
+
+            if (currentIsland == GlobalVariables.m_endIsland)
             {
-                if (GlobalVariables.m_multiplechoiceconnection == island + "," + neighbor[0] || GlobalVariables.m_multiplechoiceconnection == neighbor[0] + "," + island)
+                AllRoutes.Add(Route);
+
+                if (containsX)
                 {
-                    beenPast = true;
+                    XTotalProcessWeight = Math.Min(totalWeight, XTotalProcessWeight);
+                    return;
                 }
-                if (beenPast)
-                    WeightedDFS(neighbor[0], islandWeightIfVisitedViaMultipleChoice[island] + neighbor[1], beenPast);
+
+                MaximumWeight = Math.Max(totalWeight, MaximumWeight);
+                return;
+            }
+
+            for (int i = bridges[currentIsland].Count - 1; i >= 0; i--)
+            {
+                Vector2Int bridge = bridges[currentIsland][i];
+
+                if (bridge.x == prevIsland)
+                {
+                    bridges[currentIsland].RemoveAt(i);
+                    continue;
+                }
+
+                uint newTotWeight = totalWeight;
+                bool newContainsX = containsX;
+
+                if (bridge.y == GlobalVariables.m_multiplechoiceconnection)
+                    newContainsX = true;
                 else
-                    WeightedDFS(neighbor[0], currentIslandWeight[island] + neighbor[1], beenPast);
+                    newTotWeight += GlobalVariables.possibleBridges[bridge.y].weight;
+
+                int newPrevIsland = currentIsland;
+                int newCurrentIsland = bridge.x;
+
+                List<Vector3Int> newRoute;
+
+                if (Route != null)
+                    newRoute = Route;
+                else
+                    newRoute = new();
+
+                newRoute.Add(new(newPrevIsland, newCurrentIsland));
+                totalSearches++;
+
+                WeightedDFS(newCurrentIsland, newPrevIsland, newTotWeight, newContainsX, newRoute);
             }
         }
-        WeightedDFS(GlobalVariables.m_startIsland, 0);
-        Debug.Log("Current island weight at start: " + currentIslandWeight[GlobalVariables.m_endIsland]);
-        Debug.Log("Island weight if visited via multiple choice at start: " + islandWeightIfVisitedViaMultipleChoice[GlobalVariables.m_endIsland]);
-        int maximumWeightNeeded = currentIslandWeight[GlobalVariables.m_endIsland] - islandWeightIfVisitedViaMultipleChoice[GlobalVariables.m_endIsland];
-        Debug.Log("Maximum weight needed for shortest path: " + maximumWeightNeeded);
-        if ((uint)maximumWeightNeeded < GlobalVariables.SelectedWeightOption)
+
+        AllRoutes = new();
+
+        //           Cur island                     Prev island  tot_weight  has_x   route  1st_search
+        WeightedDFS(GlobalVariables.m_startIsland,      -1,          0,      false,  null,   true);
+
+        if (GlobalVariables.SelectedWeightOption > MaximumWeight - XTotalProcessWeight)
             return false;
-        GlobalVariables.neededweight = maximumWeightNeeded;
+        GlobalVariables.neededweight = MaximumWeight - XTotalProcessWeight;
         return true;
+    }
+
+    float CalcAverageBridgeWeight()
+    {
+        uint TotalWeightInLevel = 0;
+        foreach (var bridge in GlobalVariables.possibleBridges)
+            TotalWeightInLevel += bridge.weight;
+        return TotalWeightInLevel / (float)GlobalVariables.possibleBridges.Length;
     }
 
     public void LevelFinished()
     {
         if (!Check())
         {
-            Debug.Log("Level not finished yet");
+            OnLevelNotFinished.Invoke();
             return;
         }
-
-        // first disable star gameobjects, only make them appear when earned
-        ster1obj.SetActive(false);
-        ster2obj.SetActive(false);
-        ster3obj.SetActive(false);
 
         int starCount = 0;
 
         switch (GlobalVariables.m_LevelGoal)
         {
-            case LevelGoal.CONNECT_ALL_ISLANDS:
-                if (GlobalVariables.m_Blocks <= GlobalVariables.m_requiredBlocks + 2)
+            case LevelGoal.CONNECT_ALL_ISLANDS or LevelGoal.FIND_SHORTEST_ROUTE:
+                float AverageBridgeLength = CalcAverageBridgeWeight();
+
+                if (GlobalVariables.m_Blocks <= GlobalVariables.m_requiredBlocks + AverageBridgeLength)
                 {
                     starCount = 1;
-                    ster1obj.SetActive(true);
-                    ster1.PlayAnimation(0);
                 }
-                if (GlobalVariables.m_Blocks <= GlobalVariables.m_requiredBlocks + 1)
+                if (GlobalVariables.m_Blocks <= GlobalVariables.m_requiredBlocks + AverageBridgeLength * .3f)
                 {
                     starCount = 2;
-                    ster2obj.SetActive(true);
-                    ster2.PlayAnimation(0);
                 }
                 if (GlobalVariables.m_Blocks <= GlobalVariables.m_requiredBlocks)
                 {
                     starCount = 3;
-                    ster3obj.SetActive(true);
-                    ster3.PlayAnimation(0);
                 }
-                break;
-            case LevelGoal.FIND_SHORTEST_ROUTE:
-                if (GlobalVariables.m_Blocks <= GlobalVariables.m_requiredBlocks + 2)
-                {
-                    starCount = 1;
-                    ster1obj.SetActive(true);
-                    ster1.PlayAnimation(0);
-                }
-                if (GlobalVariables.m_Blocks <= GlobalVariables.m_requiredBlocks + 1)
-                {
-                    starCount = 2;
-                    ster2obj.SetActive(true);
-                    ster2.PlayAnimation(0);
-                }
-                if (GlobalVariables.m_Blocks <= GlobalVariables.m_requiredBlocks)
-                {
-                    starCount = 3;
-                    ster3obj.SetActive(true);
-                    ster3.PlayAnimation(0);
-                }
+
                 break;
 
             case LevelGoal.OPTIMIZE_PROCESS:
-                float offsetFromCorrectAnswer = Mathf.Abs(GlobalVariables.neededweight - GlobalVariables.SelectedWeightOption) / GlobalVariables.neededweight;
-                if (offsetFromCorrectAnswer <= 0.5)
-                {
+                float offsetFromCorrectAnswer = Mathf.Abs(GlobalVariables.neededweight - GlobalVariables.SelectedWeightOption);
+
+                if (offsetFromCorrectAnswer > 3 && offsetFromCorrectAnswer <= 5) {
                     starCount = 1;
-                    ster1obj.SetActive(true);
-                    ster1.PlayAnimation(0);
                 }
-                if (offsetFromCorrectAnswer <= 0.75)
-                {
+                else if (offsetFromCorrectAnswer > 0) {
                     starCount = 2;
-                    ster2obj.SetActive(true);
-                    ster2.PlayAnimation(0);
                 }
-                if (GlobalVariables.SelectedWeightOption == GlobalVariables.neededweight)
-                {
+                else {
                     starCount = 3;
-                    ster3obj.SetActive(true);
-                    ster3.PlayAnimation(0);
                 }
+
                 break;
 
             default:
                 break;
         }
-        CoinRewardTXT.text = CoinRewardPerStarCount[starCount].ToString();
-        GlobalVariables.m_Coins += CoinRewardPerStarCount[starCount];
 
-        LevelCompleteSound.Play();
-        LevelCompleet.SetActive(true);
-        LevelCompleetAnim.PlayAnimation(0);
-        BackgroundAnim.PlayAnimation(0);
+        if (starCount == 0)
+        {
+            OnLevelNotFinished.Invoke();
+            return;
+        }
+
+        //if (GlobalVariables.m_LevelGoal == LevelGoal.OPTIMIZE_PROCESS) currentLvlRoutes++;
+
+        StartCoroutine(ShowLevelFinishedAnimation.LevelFinished(starCount));
     }
 }

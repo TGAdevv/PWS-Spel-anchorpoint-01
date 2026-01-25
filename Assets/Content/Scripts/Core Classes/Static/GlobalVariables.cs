@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using Unity.Burst.CompilerServices;
@@ -9,6 +10,54 @@ public enum LevelGoal
     OPTIMIZE_PROCESS,
     FIND_SHORTEST_ROUTE,  
 }
+
+// ------------------------------
+//  GlobalVariables->STRUCTS
+// ------------------------------
+[Serializable]
+public struct Bridge
+{
+    public bool activated;
+    public uint weight;
+    public int startIsland;
+    public int endIsland;
+
+    public Bridge(int _startIsland, int _endIsland, uint _weight, bool _activated)
+    {
+        activated = _activated;
+        weight = _weight;
+        startIsland = _startIsland;
+        endIsland = _endIsland;
+    }
+
+    public static bool operator ==(Bridge b1, Bridge b2)
+    {
+        return (b1.startIsland == b2.startIsland && b1.endIsland == b2.endIsland) ||
+            (b1.startIsland == b2.endIsland && b1.endIsland == b2.startIsland);
+    }
+    public static bool operator !=(Bridge b1, Bridge b2)
+    {
+        return !(b1.startIsland == b2.startIsland && b1.endIsland == b2.endIsland) &&
+            !(b1.startIsland == b2.endIsland && b1.endIsland == b2.startIsland);
+    }
+
+
+
+    public override bool Equals(object obj)
+    {
+        return obj is Bridge bridge &&
+               activated == bridge.activated &&
+               weight == bridge.weight &&
+               startIsland == bridge.startIsland &&
+               endIsland == bridge.endIsland;
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(activated, weight, startIsland, endIsland);
+    }
+}
+// =======================================
 
 public static class GlobalVariables
 {
@@ -28,14 +77,14 @@ public static class GlobalVariables
 
     // Bridge Variables
     public static string[] allWeights = new string[0];
-    public static string[] possibleBridges = new string[0];
+    public static Bridge[] possibleBridges = new Bridge[0];
     public static List<GameObject> bridgeObjects = new();
     public static int m_totalIslands = 0;
 
     // LevelCompleteCheck Variables
     public static int m_requiredBlocks = -1;
-    public static string m_multiplechoiceconnection = "";
-    public static int neededweight = 0;
+    public static int m_multiplechoiceconnection = -1;
+    public static uint neededweight = 0;
     public static uint SelectedWeightOption = 0;
 
     
@@ -54,10 +103,6 @@ public static class GlobalVariables
     {
         m_Blocks += amount;
         return true;
-    }
-    public static int[] IdentifyPossibletargetislands(int startIsland)
-    {
-        return new int[] { -1, -1 };
     }
     // =======================================
 }

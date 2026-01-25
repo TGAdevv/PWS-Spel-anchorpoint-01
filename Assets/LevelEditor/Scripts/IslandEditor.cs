@@ -326,7 +326,7 @@ public class IslandEditor : MonoBehaviour
     {
         CultureInfo US = new("en-US");
         Thread.CurrentThread.CurrentCulture = US;
-        Debug.Log("Importing level: " + _level.text);
+        //Debug.Log("Importing level: " + _level.text);
 
         // Wipe everything from what's currently being edited
         foreach (ManageIslandConnections island in IslandScripts)
@@ -359,7 +359,7 @@ public class IslandEditor : MonoBehaviour
                 // parts[3] is buildingblocks
                 buildingblocks = level.Split("_")[3];
                 if (!int.TryParse(buildingblocks.Trim(), out int sliderValue)){
-                    string cleanBB = new string(buildingblocks.Where(c => char.IsDigit(c)).ToArray());
+                    string cleanBB = new(buildingblocks.Where(c => char.IsDigit(c)).ToArray());
                     if (int.TryParse(cleanBB.Trim(), out sliderValue))
                     {
                         BuildingBlocksSlider.value = sliderValue;
@@ -376,7 +376,7 @@ public class IslandEditor : MonoBehaviour
         {
             buildingblocks = level.Split("_")[4];
             if (!int.TryParse(buildingblocks.Trim(), out int sliderValue)){
-                string cleanBB = new string(buildingblocks.Where(c => char.IsDigit(c)).ToArray());
+                string cleanBB = new(buildingblocks.Where(c => char.IsDigit(c)).ToArray());
                 if (int.TryParse(cleanBB.Trim(), out sliderValue))
                 {
                     BuildingBlocksSlider.value = sliderValue;
@@ -463,7 +463,7 @@ public class IslandEditor : MonoBehaviour
             BeginIsland = int.Parse(startEndParts[0].Trim());
             //endisland needs to be set carefully, as there could be trailing whitespace that disturbs parsing
             if (!int.TryParse(startEndParts[1].Trim(), out int endValue)){
-                string cleanEE = new string(startEndParts[1].Where(c => char.IsDigit(c)).ToArray());
+                string cleanEE = new(startEndParts[1].Where(c => char.IsDigit(c)).ToArray());
                 if (int.TryParse(cleanEE.Trim(), out endValue))
                 {
                     EndIsland = endValue;

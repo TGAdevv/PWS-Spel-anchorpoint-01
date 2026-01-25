@@ -3,34 +3,30 @@ using TMPro;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using System.Collections.Generic;
-using System;
+using UnityEngine.InputSystem;
 
 public class ClickToCreateBridge : MonoBehaviour
 {
-    SplineEditor spline;
-    float bridgeActive = 0;
-    float targetBridgeActive = 0;
-    float speed = 3;
-    uint selectedPrice;
+    float speed = 1.4f;
 
-    public uint[] price;
+    float bridgeActive = 0;
+    bool targetBridgeActive = false;
+    SplineEditor spline;
+
+    public uint price;
     public int startIsland;
     public int endIsland;
-
-    public RectTransform CameraCanvas;
-    public GameObject MenuPricePrefab;
-    public GameObject MenuPriceVarPrefab;
 
     RectTransform rect;
     TMP_Text priceTXT;
 
     Vector3 PricePoint;
-    void OnPriceChanged(int index)
-    {
-        selectedPrice = price[index];
-        GlobalVariables.SelectedWeightOption = selectedPrice;
-        Debug.Log("Selected price updated to: " + GlobalVariables.SelectedWeightOption);
-    }
+
+    public RectTransform CameraCanvas;
+    public GameObject MenuPricePrefab;
+    public AudioSource buildBridgeSFX;
+    public AudioSource destroyBridgeSFX;
+
     void Start()
     {
         spline = GetComponent<SplineEditor>();
@@ -40,31 +36,17 @@ public class ClickToCreateBridge : MonoBehaviour
             enabled = false;
         }
 
-        GameObject PurchaseBlock = Instantiate((price.Length == 1) ? MenuPricePrefab : MenuPriceVarPrefab, CameraCanvas);
+        GameObject PurchaseBlock = Instantiate(MenuPricePrefab, CameraCanvas);
+
         rect = PurchaseBlock.GetComponent<RectTransform>();
         priceTXT = PurchaseBlock.GetComponentInChildren<TMP_Text>();
 
-        if (price.Length > 1)
-        {
-            uint selectedPrice = price[0];
-            TMP_Dropdown DropdownPrices = PurchaseBlock.GetComponent<TMP_Dropdown>();
-
-            TMP_Dropdown.OptionData[] optionData = new TMP_Dropdown.OptionData[price.Length];
-            for (int i = 0; i < price.Length; i++)
-                optionData[i] = new(price[i].ToString());
-
-            DropdownPrices.AddOptions(new List<TMP_Dropdown.OptionData>(optionData));
-            selectedPrice = price[DropdownPrices.value];
-            DropdownPrices.onValueChanged.AddListener(OnPriceChanged);
-        }
-
-        priceTXT.text = price[0].ToString();
+        priceTXT.text = price.ToString();
 
         PricePoint = spline.SamplePointInCurve(spline.trTOta[Mathf.RoundToInt(spline.resolution * .5f)]) + spline.transform.position;
     }
     private void OnMouseDown()
     {
-        uint _price = (price.Length == 1) ? price[0] : uint.Parse(priceTXT.text);
         EventSystem currentEventSys = EventSystem.current;
         PointerEventData eventData = new(currentEventSys);
         eventData.position = Input.mousePosition;
@@ -73,38 +55,28 @@ public class ClickToCreateBridge : MonoBehaviour
         if (results.Count > 0)
             return;
 
-        GlobalVariables.m_Blocks += _price;
+        GlobalVariables.m_Blocks += price;
 
-        if (targetBridgeActive == 1)
-            GlobalVariables.m_Blocks -= _price * 2;
+        if (targetBridgeActive)
+            GlobalVariables.m_Blocks -= price * 2;
 
-        targetBridgeActive = 1 - targetBridgeActive;
+        float pitchMod = Random.Range(0.9f, 1.1f);
+        AudioSource sourceToPlay = targetBridgeActive ? destroyBridgeSFX : buildBridgeSFX;
+        sourceToPlay.pitch = pitchMod;
+        speed = 1.6f * pitchMod;
+        sourceToPlay.Play();
+
+        targetBridgeActive = !targetBridgeActive;
+        Bridge ThisBridge = new(startIsland, endIsland, price, targetBridgeActive);
 
         //check for bridge in globalvariables and update accordingly
-        if (targetBridgeActive == 1)
+        for (int i = 0; i < GlobalVariables.possibleBridges.Length; i++)
         {
-            for (int i = 0; i < GlobalVariables.possibleBridges.Length; i++)
+            Bridge CurBridge = GlobalVariables.possibleBridges[i];
+            if (ThisBridge == CurBridge)
             {
-                string CurrentBridge = GlobalVariables.possibleBridges[i];
-                string WeightOfBridge = CurrentBridge.Split(',')[2];
-                if (GlobalVariables.possibleBridges[i] == startIsland + "," + endIsland + "," + WeightOfBridge + ",0" || GlobalVariables.possibleBridges[i] == endIsland + "," + startIsland + "," + WeightOfBridge + ",0")
-                {
-                    GlobalVariables.possibleBridges[i] = startIsland + "," + endIsland + ",1";
-                    return;
-                }
-            }
-        }
-        else
-        {
-            for (int i = 0; i < GlobalVariables.possibleBridges.Length; i++)
-            {
-                string CurrentBridge = GlobalVariables.possibleBridges[i];
-                string WeightOfBridge = CurrentBridge.Split(',')[2];
-                if (GlobalVariables.possibleBridges[i] == startIsland + "," + endIsland + "," + WeightOfBridge + ",1" || GlobalVariables.possibleBridges[i] == endIsland + "," + startIsland + "," + WeightOfBridge + ",1")
-                {
-                    GlobalVariables.possibleBridges[i] = startIsland + "," + endIsland + "," + WeightOfBridge + ",0";
-                    return;
-                }
+                GlobalVariables.possibleBridges[i] = ThisBridge;
+                return;
             }
         }
     }
@@ -113,15 +85,15 @@ public class ClickToCreateBridge : MonoBehaviour
 
     private void Update()
     {
-        if (bridgeActive != targetBridgeActive) 
+        if (bridgeActive != (targetBridgeActive ? 1f : 0f)) 
         {
             timer += Time.deltaTime * speed;
-            bridgeActive = Mathf.Lerp(1 - targetBridgeActive, targetBridgeActive, timer);
+            bridgeActive = Mathf.Lerp(1 - (targetBridgeActive ? 1 : 0), targetBridgeActive ? 1 : 0, Mathf.Round(timer*10f)*.1f);
         }
 
-        if (timer > 1) 
+        if (timer >= 1 || bridgeActive == (targetBridgeActive ? 1 : 0)) 
         {
-            bridgeActive = targetBridgeActive;
+            bridgeActive = targetBridgeActive ? 1 : 0;
             timer = 0;
         }
 
