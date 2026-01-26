@@ -6279,7 +6279,7 @@ MonoBehaviour:
   buildBridge: {fileID: 8300000, guid: e8a4801eb70dccb488603f37b09c9ea0, type: 3}
   destroyBridge: {fileID: 8300000, guid: 0f182257756bdf345956de1975594b13, type: 3}
   LoadScreenUI: {fileID: 2060351061}
-  currentLevel: 12
+  currentLevel: 0
   startIsland: -1
   endIsland: -1
   OnImported:
@@ -6594,7 +6594,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   HintText: {fileID: 1738724992}
-  HintBridgeToTextThreshold: 10
+  HintBridgeToTextThreshold: 15
 --- !u!1 &867766282
 GameObject:
   m_ObjectHideFlags: 0

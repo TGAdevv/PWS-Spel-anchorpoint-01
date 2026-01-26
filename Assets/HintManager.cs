@@ -3,7 +3,6 @@ using TMPro;
 using UnityEngine.Events;
 using System.Linq;
 using System.Collections.Generic;
-
 public class HintManager : MonoBehaviour
 {
     public UnityEvent OnHintBoughtSuccesful;
@@ -12,6 +11,7 @@ public class HintManager : MonoBehaviour
     [Header("Panel used for displaying hints through text")]
     public UnityEvent ShowHintPanel;
     public TMP_Text   HintText;
+    public List<List<Vector3Int>> AllRoutes;
 
     [Header("After how many req blocks should the hint switch " +
         "from revealing a single bridge to revealing the required amount of blocks")]
@@ -41,12 +41,86 @@ public class HintManager : MonoBehaviour
                 }
                 else
                 {
-                    //add all weights to a list, sort from low to high and check for the lowest weigts if bridge is active. 
-                    //if not active, check if the bridge would make a circle (no need if the index of the weightslist is 0 or 1 (cant make a circle with 2 values)).
-                    //Find and reveal a bridge that is part of the optimal solution
-                    Debug.LogWarning("HINT SYSTEM FOR " + GlobalVariables.m_LevelGoal.ToString() + " NOT FULLY IMPLEMENTED YET");
-                    return;
+                    List<uint> weights = new List<uint>();
+                    List<bool> activated = new List<bool>();
+                    foreach (var bridge in GlobalVariables.possibleBridges)
+                    {
+                        weights.Add(bridge.weight);
+                        activated.Add(bridge.activated);
+                    }
+                    for (int i = 0; i < activated.Count; i++)
+                    {
+                        if (activated[i]) weights[i] = uint.MaxValue;
+                        //to avoid picking an already active bridge
+                    }
+                    weights.Sort();
+                    for (int i = 0; i < weights.Count; i++)
+                    {
+                        uint weightToCheck = weights[i];
+                        for (int j = 0; j < GlobalVariables.possibleBridges.Length; j++)
+                        {
+                            var bridge = GlobalVariables.possibleBridges[j];
+                            if (bridge.weight == weightToCheck && !bridge.activated)
+                            {
+                                //set internal value of bridge to active
+                                GlobalVariables.possibleBridges[j] = new Bridge(bridge.startIsland, bridge.endIsland, bridge.weight, true);
+                                //check if adding this bridge would create a circle
+                                bool createsCircle = false;
+                                void DFS(int currentIsland, HashSet<int> visited, int parentIsland)
+                                {
+                                    visited.Add(currentIsland);
+                                    for (int k = 0; k < GlobalVariables.possibleBridges.Length; k++)
+                                    {
+                                        var b = GlobalVariables.possibleBridges[k];
+                                        if (b.activated == false) continue;
+                                        if (b.startIsland != currentIsland && b.endIsland != currentIsland) continue;
+
+                                        int neighbor = -1;
+                                        if (b.startIsland == currentIsland)
+                                            neighbor = b.endIsland;
+                                        else if (b.endIsland == currentIsland)
+                                            neighbor = b.startIsland;
+
+                                        if (!visited.Contains(neighbor))
+                                        {
+                                            DFS(neighbor, visited, currentIsland);
+                                        }
+                                        else if (neighbor != parentIsland)
+                                        {
+                                            createsCircle = true;
+                                            return;
+                                        }
+                                    }
+                                }
+                                HashSet<int> visited = new HashSet<int>();
+                                DFS(bridge.startIsland, visited, -1);
+                                if (createsCircle) {
+                                    //revert internal value of bridge to inactive
+                                    GlobalVariables.possibleBridges[j] = new Bridge(bridge.startIsland, bridge.endIsland, bridge.weight, false);
+                                    continue;
+                                }
+                                //reveal this bridge visually, internal value already set to active
+                                GlobalVariables.m_Blocks += bridge.weight;
+                                for (int k = 0; k < GlobalVariables.bridgeObjects.Count; k++)
+                                {
+                                    var bridgeObj = GlobalVariables.bridgeObjects[k];
+                                    if (bridgeObj == null) continue;
+                                    var bridgeScript = bridgeObj.GetComponent<ClickToCreateBridge>();
+                                    if (bridgeScript == null) continue;
+                                    if ((bridgeScript.startIsland == bridge.startIsland &&
+                                        bridgeScript.endIsland == bridge.endIsland) ||
+                                        (bridgeScript.startIsland == bridge.endIsland &&
+                                        bridgeScript.endIsland == bridge.startIsland))
+                                    {
+                                        bridgeScript.targetBridgeActive = true;
+                                    }
+                                }
+                                return;
+                            }
+                        }
+                    }
                 }
+                break;
             case LevelGoal.FIND_SHORTEST_ROUTE:
                 if (req_blocks >= HintBridgeToTextThreshold)
                 {
@@ -173,7 +247,87 @@ public class HintManager : MonoBehaviour
                 break;
                 }
             case LevelGoal.OPTIMIZE_PROCESS:
-                //HintText.text = $"Het langste proces kost {ChckLvlFinished.LevelRoutes[ChckLvlFinished.currentLvlRoutes].MaxWeight} blokken";
+                //impossible to show bridge, always show text hint
+                //code copied from CheckIfLevelFinished.cs
+                // Maximum weight of process with x with x=0
+                uint XTotalProcessWeight = 0;
+                uint MaximumWeight = 0;
+
+                // x = index of island it goes to, y = index of the bridge in possibleBridges array
+                List<Vector2Int>[] bridges = new List<Vector2Int>[GlobalVariables.m_totalIslands];
+
+                for (int i = 0; i < GlobalVariables.possibleBridges.Length; i++)
+                {
+                    int startIsland = GlobalVariables.possibleBridges[i].startIsland;
+                    int endIsland   = GlobalVariables.possibleBridges[i].endIsland;
+
+                    if (bridges[startIsland] == null)
+                        bridges[startIsland] = new();
+                    bridges[startIsland].Add(new(endIsland, i));
+
+                    if (bridges[endIsland] == null)
+                        bridges[endIsland] = new();
+                    bridges[endIsland].Add(new(startIsland, i));
+                }
+
+                int totalSearches = 0;
+
+                void WeightedDFS(int currentIsland, int prevIsland, uint totalWeight, bool containsX, List<Vector3Int> Route, bool firstSearch = false)
+                {
+                    if (currentIsland == GlobalVariables.m_startIsland && !firstSearch)
+                        return;
+
+                    if (currentIsland == GlobalVariables.m_endIsland)
+                    {
+                        AllRoutes.Add(Route);
+
+                        if (containsX)
+                        {
+                            XTotalProcessWeight = System.Math.Max(totalWeight, XTotalProcessWeight);
+                            return;
+                        }
+
+                        MaximumWeight = System.Math.Max(totalWeight, MaximumWeight);
+                        return;
+                    }
+
+                    for (int i = bridges[currentIsland].Count - 1; i >= 0; i--)
+                    {
+                        Vector2Int bridge = bridges[currentIsland][i];
+
+                        if (bridge.x == prevIsland)
+                            continue;
+
+                        uint newTotWeight = totalWeight;
+                        bool newContainsX = containsX;
+
+                        if (bridge.y == GlobalVariables.m_multiplechoiceconnection)
+                            newContainsX = true;
+                        else
+                            newTotWeight += GlobalVariables.possibleBridges[bridge.y].weight;
+
+                        int newPrevIsland = currentIsland;
+                        int newCurrentIsland = bridge.x;
+
+                        List<Vector3Int> newRoute;
+
+                        if (Route != null)
+                            newRoute = Route;
+                        else
+                            newRoute = new();
+
+                        newRoute.Add(new(newPrevIsland, newCurrentIsland));
+                        totalSearches++;
+
+                        WeightedDFS(newCurrentIsland, newPrevIsland, newTotWeight, newContainsX, newRoute);
+                    }
+                }
+
+                AllRoutes = new();
+
+                //           Cur island                     Prev island  tot_weight  has_x   route  1st_search
+                WeightedDFS(GlobalVariables.m_startIsland,      -1,          0,      false,  null,   true);
+                HintText.text = $"Het langste proces zonder langs de in te stellen brug te gaan kost {MaximumWeight} blokken";
                 ShowHintPanel.Invoke();
                 break;
         }

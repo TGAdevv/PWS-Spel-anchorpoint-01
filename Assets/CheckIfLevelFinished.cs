@@ -23,10 +23,8 @@ public class CheckIfLevelFinished : MonoBehaviour
             //find active bridges
             for (int i = 0; i < GlobalVariables.possibleBridges.Length; i++)
             {
-                Debug.Log("Checking bridge between " + GlobalVariables.possibleBridges[i].startIsland + " and " + GlobalVariables.possibleBridges[i].endIsland + " activated: " + GlobalVariables.possibleBridges[i].activated);
                 if (GlobalVariables.possibleBridges[i].activated)
                 {
-                    Debug.Log("Found active bridge between " + GlobalVariables.possibleBridges[i].startIsland + " and " + GlobalVariables.possibleBridges[i].endIsland);
                     activeBridges.Add(GlobalVariables.possibleBridges[i]);
                 }   
             }
