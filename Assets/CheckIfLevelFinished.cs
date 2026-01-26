@@ -23,8 +23,10 @@ public class CheckIfLevelFinished : MonoBehaviour
             //find active bridges
             for (int i = 0; i < GlobalVariables.possibleBridges.Length; i++)
             {
+                Debug.Log("Checking bridge between " + GlobalVariables.possibleBridges[i].startIsland + " and " + GlobalVariables.possibleBridges[i].endIsland + " activated: " + GlobalVariables.possibleBridges[i].activated);
                 if (GlobalVariables.possibleBridges[i].activated)
                 {
+                    Debug.Log("Found active bridge between " + GlobalVariables.possibleBridges[i].startIsland + " and " + GlobalVariables.possibleBridges[i].endIsland);
                     activeBridges.Add(GlobalVariables.possibleBridges[i]);
                 }   
             }
@@ -81,7 +83,7 @@ public class CheckIfLevelFinished : MonoBehaviour
         }
 
         // Maximum weight of process with x with x=0
-        uint XTotalProcessWeight = uint.MaxValue;
+        uint XTotalProcessWeight = 0;
         uint MaximumWeight = 0;
 
         // x = index of island it goes to, y = index of the bridge in possibleBridges array
@@ -114,7 +116,7 @@ public class CheckIfLevelFinished : MonoBehaviour
 
                 if (containsX)
                 {
-                    XTotalProcessWeight = Math.Min(totalWeight, XTotalProcessWeight);
+                    XTotalProcessWeight = Math.Max(totalWeight, XTotalProcessWeight);
                     return;
                 }
 
@@ -127,10 +129,7 @@ public class CheckIfLevelFinished : MonoBehaviour
                 Vector2Int bridge = bridges[currentIsland][i];
 
                 if (bridge.x == prevIsland)
-                {
-                    bridges[currentIsland].RemoveAt(i);
                     continue;
-                }
 
                 uint newTotWeight = totalWeight;
                 bool newContainsX = containsX;

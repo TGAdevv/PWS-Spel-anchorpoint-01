@@ -10,7 +10,7 @@ public class ClickToCreateBridge : MonoBehaviour
     float speed = 1.4f;
 
     float bridgeActive = 0;
-    bool targetBridgeActive = false;
+    public bool targetBridgeActive = false;
     SplineEditor spline;
 
     public uint price;

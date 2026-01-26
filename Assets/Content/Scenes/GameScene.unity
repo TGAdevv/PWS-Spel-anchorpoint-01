@@ -6279,7 +6279,7 @@ MonoBehaviour:
   buildBridge: {fileID: 8300000, guid: e8a4801eb70dccb488603f37b09c9ea0, type: 3}
   destroyBridge: {fileID: 8300000, guid: 0f182257756bdf345956de1975594b13, type: 3}
   LoadScreenUI: {fileID: 2060351061}
-  currentLevel: 6
+  currentLevel: 12
   startIsland: -1
   endIsland: -1
   OnImported:
@@ -6478,176 +6478,6 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   ShowLevelFinishedAnimation: {fileID: 867766283}
-  LevelRoutes:
-  - routes:
-    - Bridges:
-      - activated: 0
-        weight: 5
-        startIsland: 3
-        endIsland: 1
-      - activated: 0
-        weight: 20
-        startIsland: 1
-        endIsland: 0
-    - Bridges:
-      - activated: 0
-        weight: 0
-        startIsland: 3
-        endIsland: 2
-      - activated: 0
-        weight: 15
-        startIsland: 2
-        endIsland: 0
-    MaxWeight: 25
-  - routes:
-    - Bridges:
-      - activated: 0
-        weight: 20
-        startIsland: 3
-        endIsland: 1
-      - activated: 0
-        weight: 30
-        startIsland: 1
-        endIsland: 0
-    - Bridges:
-      - activated: 0
-        weight: 0
-        startIsland: 3
-        endIsland: 2
-      - activated: 0
-        weight: 25
-        startIsland: 2
-        endIsland: 0
-    MaxWeight: 50
-  - routes:
-    - Bridges:
-      - activated: 0
-        weight: 5
-        startIsland: 3
-        endIsland: 1
-      - activated: 0
-        weight: 25
-        startIsland: 1
-        endIsland: 0
-    - Bridges:
-      - activated: 0
-        weight: 10
-        startIsland: 3
-        endIsland: 4
-      - activated: 0
-        weight: 10
-        startIsland: 4
-        endIsland: 0
-    - Bridges:
-      - activated: 0
-        weight: 0
-        startIsland: 3
-        endIsland: 2
-      - activated: 0
-        weight: 5
-        startIsland: 2
-        endIsland: 0
-    MaxWeight: 30
-  - routes:
-    - Bridges:
-      - activated: 0
-        weight: 5
-        startIsland: 3
-        endIsland: 1
-      - activated: 0
-        weight: 6
-        startIsland: 1
-        endIsland: 0
-    - Bridges:
-      - activated: 0
-        weight: 4
-        startIsland: 3
-        endIsland: 4
-      - activated: 0
-        weight: 10
-        startIsland: 4
-        endIsland: 0
-    - Bridges:
-      - activated: 0
-        weight: 7
-        startIsland: 3
-        endIsland: 5
-      - activated: 0
-        weight: 5
-        startIsland: 0
-        endIsland: 5
-    - Bridges:
-      - activated: 0
-        weight: 0
-        startIsland: 3
-        endIsland: 2
-      - activated: 0
-        weight: 8
-        startIsland: 2
-        endIsland: 0
-    MaxWeight: 14
-  - routes:
-    - Bridges:
-      - activated: 0
-        weight: 5
-        startIsland: 4
-        endIsland: 3
-      - activated: 0
-        weight: 6
-        startIsland: 3
-        endIsland: 1
-    - Bridges:
-      - activated: 0
-        weight: 5
-        startIsland: 4
-        endIsland: 0
-      - activated: 0
-        weight: 4
-        startIsland: 1
-        endIsland: 0
-    - Bridges:
-      - activated: 0
-        weight: 0
-        startIsland: 4
-        endIsland: 2
-      - activated: 0
-        weight: 5
-        startIsland: 2
-        endIsland: 1
-    MaxWeight: 11
-  - routes:
-    - Bridges:
-      - activated: 0
-        weight: 6
-        startIsland: 5
-        endIsland: 0
-      - activated: 0
-        weight: 5
-        startIsland: 0
-        endIsland: 1
-      - activated: 0
-        weight: 8
-        startIsland: 1
-        endIsland: 2
-    - Bridges:
-      - activated: 0
-        weight: 7
-        startIsland: 3
-        endIsland: 5
-      - activated: 0
-        weight: 5
-        startIsland: 2
-        endIsland: 3
-    - Bridges:
-      - activated: 0
-        weight: 0
-        startIsland: 5
-        endIsland: 4
-      - activated: 0
-        weight: 7
-        startIsland: 4
-        endIsland: 2
-    MaxWeight: 19
 --- !u!114 &861485213
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6882,6 +6712,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  checkIfLevelFinished: {fileID: 0}
   ShowStar:
   - m_PersistentCalls:
       m_Calls:
