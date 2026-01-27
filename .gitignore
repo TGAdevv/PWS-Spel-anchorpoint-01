@@ -86,3 +86,5 @@ crashlytics-build.properties
 *_bak*.hipnc
 
 *.DS_Store
+Assets/Content/Materials/Standard/Water.mat
+Assets/TextMesh Pro/Fonts/Nunito SDF.asset

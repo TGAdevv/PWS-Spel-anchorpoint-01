@@ -59,10 +59,28 @@ public class OrbitalCamera : MonoBehaviour
             AngleVel = new Vector2(-deltaMouse.y, deltaMouse.x) * rotationSpeed;
         }
 
-        if (cam.orthographic)
-            cam.orthographicSize -= Input.mouseScrollDelta.y * scaleSpeed;
-        else
-            transform.localPosition += Input.mouseScrollDelta.y * scaleSpeed * Vector3.forward;
+        if (Input.mouseScrollDelta.y != 0)
+        {
+            EventSystem currentEventSys = EventSystem.current;
+            PointerEventData eventData = new(currentEventSys);
+            eventData.position = Input.mousePosition;
+            List<RaycastResult> results = new();
+            currentEventSys.RaycastAll(eventData, results);
+            bool zoomingAllowed = true;
+            if (results.Count == 0)
+                cam.orthographicSize -= Input.mouseScrollDelta.y * scaleSpeed;
+            else
+            {
+                foreach (var result in results)
+                    if (result.gameObject.CompareTag("Menu"))
+                    {
+                        zoomingAllowed = false;
+                        break;
+                    }
+                if (zoomingAllowed)
+                    cam.orthographicSize -= Input.mouseScrollDelta.y * scaleSpeed;
+            }
+        }
 
         cam.orthographicSize = Mathf.Clamp(cam.orthographicSize, minZoom, maxZoom);
     }
