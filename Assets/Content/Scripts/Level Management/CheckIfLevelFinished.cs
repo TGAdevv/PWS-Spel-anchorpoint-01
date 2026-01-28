@@ -228,12 +228,6 @@ public class CheckIfLevelFinished : MonoBehaviour
                 break;
         }
 
-        if (starCount == 0)
-        {
-            OnLevelNotFinished.Invoke();
-            return;
-        }
-
         //if (GlobalVariables.m_LevelGoal == LevelGoal.OPTIMIZE_PROCESS) currentLvlRoutes++;
 
         StartCoroutine(ShowLevelFinishedAnimation.LevelFinished(starCount));

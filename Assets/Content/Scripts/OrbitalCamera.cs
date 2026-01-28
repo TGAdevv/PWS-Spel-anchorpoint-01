@@ -31,32 +31,36 @@ public class OrbitalCamera : MonoBehaviour
 
     private void LateUpdate()
     {
-        curAngle += AngleVel;
-
-        if (!Input.GetMouseButton(0))
+        // Check if any bridge is in puzzle mode
+        bool inPuzzleMode = IsAnyBridgeInPuzzleMode();
+        if (!inPuzzleMode)
         {
-            AngleVel = Vector2.SmoothDamp(AngleVel, Vector2.zero, ref vel, smoothTime);
-            moveCamera = false;
-        }
+            curAngle += AngleVel;
 
-        curAngle = new Vector2(Mathf.Clamp(curAngle.x, 10, 70), curAngle.y);
-        focusPoint.transform.rotation = Quaternion.Euler(curAngle);
-
-        if (Input.GetMouseButtonDown(0) && !Physics.Raycast(cam.ScreenPointToRay(Input.mousePosition), 1000, bridgeMask) && !Physics.Raycast(cam.ScreenPointToRay(Input.mousePosition), 1000, LayerMask.GetMask("UI")))
-        {
-            EventSystem currentEventSys = EventSystem.current;
-            PointerEventData eventData = new(currentEventSys);
-            eventData.position = Input.mousePosition;
-            List<RaycastResult> results = new();
-            currentEventSys.RaycastAll(eventData, results);
-            if (results.Count == 0)
-                moveCamera = true;
-        }
-            
-        if (moveCamera) 
-        {
-            Vector2 deltaMouse = Input.mousePositionDelta;
-            AngleVel = new Vector2(-deltaMouse.y, deltaMouse.x) * rotationSpeed;
+            if (!Input.GetMouseButton(0))
+            {
+                AngleVel = Vector2.SmoothDamp(AngleVel, Vector2.zero, ref vel, smoothTime);
+                moveCamera = false;
+            }
+            curAngle = new Vector2(Mathf.Clamp(curAngle.x, 10, 70), curAngle.y);
+            focusPoint.transform.rotation = Quaternion.Euler(curAngle);
+        
+            if (Input.GetMouseButtonDown(0) && !Physics.Raycast(cam.ScreenPointToRay(Input.mousePosition), 1000, bridgeMask) && !Physics.Raycast(cam.ScreenPointToRay(Input.mousePosition), 1000, LayerMask.GetMask("UI")))
+            {
+                EventSystem currentEventSys = EventSystem.current;
+                PointerEventData eventData = new(currentEventSys);
+                eventData.position = Input.mousePosition;
+                List<RaycastResult> results = new();
+                currentEventSys.RaycastAll(eventData, results);
+                if (results.Count == 0)
+                    moveCamera = true;
+            }
+                
+            if (moveCamera) 
+            {
+                Vector2 deltaMouse = Input.mousePositionDelta;
+                AngleVel = new Vector2(-deltaMouse.y, deltaMouse.x) * rotationSpeed;
+            }
         }
 
         if (Input.mouseScrollDelta.y != 0)
@@ -83,5 +87,17 @@ public class OrbitalCamera : MonoBehaviour
         }
 
         cam.orthographicSize = Mathf.Clamp(cam.orthographicSize, minZoom, maxZoom);
+    }
+
+    private bool IsAnyBridgeInPuzzleMode()
+    {
+        // Find all ClickToCreateBridge components and check if any are in puzzle mode
+        ClickToCreateBridge[] bridges = FindObjectsByType<ClickToCreateBridge>(FindObjectsSortMode.None);
+        foreach (var bridge in bridges)
+        {
+            if (bridge.IsInPuzzleMode())
+                return true;
+        }
+        return false;
     }
 }

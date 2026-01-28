@@ -240,6 +240,64 @@ public class LevelImporter : MonoBehaviour
 
         Bridges.Add(newSpline);
         GlobalVariables.bridgeObjects.Add(newBridge);
+
+        // Create duplicate bridgeparts on top if level goal is not OPTIMIZE_PROCESS
+        if (GlobalVariables.m_LevelGoal != LevelGoal.OPTIMIZE_PROCESS)
+        {
+            uint bridgeCount = weight[0];
+            newSpline.GenerateSpline(); // Generate main bridge first to get curve data
+            
+            // Divide the bridge into segments
+            for (uint segmentIndex = 0; segmentIndex < bridgeCount; segmentIndex++)
+            {
+                GameObject segmentBridge = new("Bridge " + index.x + ", " + index.y + " (Segment " + segmentIndex + ")");
+                segmentBridge.transform.parent = BridgesParent;
+                segmentBridge.layer = LayerMask.NameToLayer("Bridge");
+                segmentBridge.AddComponent<MeshCollider>();
+                segmentBridge.AddComponent<MeshFilter>();
+                segmentBridge.AddComponent<MeshRenderer>();
+
+                SplineEditor segmentSpline = segmentBridge.AddComponent<SplineEditor>();
+                segmentSpline.BridgeMats = BridgeMats;
+                segmentSpline.resolution = Mathf.Max(2, Mathf.RoundToInt(newSpline.resolution / (int)bridgeCount));
+                segmentSpline.pillarCount = Mathf.Max(1, newSpline.pillarCount / (int)bridgeCount);
+                segmentSpline.bridgeWidth = newSpline.bridgeWidth;
+                segmentSpline.bridgeHeight = newSpline.bridgeHeight;
+                if (axisPrefab)
+                    segmentSpline.percentage_transparent = 1f;
+
+                // Calculate segment boundaries (0 to 1 normalized along curve)
+                float segmentStart = segmentIndex / (float)bridgeCount;
+                float segmentEnd = (segmentIndex + 1) / (float)bridgeCount;
+
+                // Sample points along the main bridge curve for this segment
+                List<Transform> segmentSplineTransforms = new();
+                int samplesPerSegment = 5; // Number of intermediate points to sample
+
+                for (int i = 0; i <= samplesPerSegment; i++)
+                {
+                    float t = segmentStart + (segmentEnd - segmentStart) * (i / (float)samplesPerSegment);
+                    Vector3 sampledPoint = newSpline.SamplePointInCurve(t) + newSpline.transform.position;
+                    
+                    GameObject segmentSplinePoint = new("P" + i);
+                    segmentSplinePoint.transform.position = sampledPoint;
+                    segmentSplinePoint.transform.parent = segmentBridge.transform;
+                    segmentSplineTransforms.Add(segmentSplinePoint.transform);
+                }
+
+                segmentSpline.splinePoints = segmentSplineTransforms;
+                segmentSpline.GenerateSpline();
+
+                if (!GlobalVariables.bridgeBuildParts.ContainsKey(newBridge))
+                    GlobalVariables.bridgeBuildParts[newBridge] = new List<GameObject>();
+                GlobalVariables.bridgeBuildParts[newBridge].Add(segmentBridge);
+                
+                // Store the original bridge segment position for snapping
+                Vector3 originalPosition = segmentBridge.transform.localPosition;
+                GlobalVariables.bridgeSegmentOriginalPositions[segmentBridge] = originalPosition;
+                segmentBridge.SetActive(false);
+            }
+        }
     }
 
     int LevelId = 0;

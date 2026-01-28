@@ -60,7 +60,7 @@ public class HintManager : MonoBehaviour
                         for (int j = 0; j < GlobalVariables.possibleBridges.Length; j++)
                         {
                             var bridge = GlobalVariables.possibleBridges[j];
-                            if (bridge.weight == weightToCheck && !bridge.activated)
+                            if (bridge.weight == weightToCheck && !bridge.activated && !bridge.inPuzzleMode)
                             {
                                 //set internal value of bridge to active
                                 GlobalVariables.possibleBridges[j] = new Bridge(bridge.startIsland, bridge.endIsland, bridge.weight, true);

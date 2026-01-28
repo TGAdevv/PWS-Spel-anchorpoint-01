@@ -21,13 +21,14 @@ public struct Bridge
     public uint weight;
     public int startIsland;
     public int endIsland;
-
-    public Bridge(int _startIsland, int _endIsland, uint _weight, bool _activated)
+    public bool inPuzzleMode;
+    public Bridge(int _startIsland, int _endIsland, uint _weight, bool _activated, bool _puzzleMode = false)
     {
         activated = _activated;
         weight = _weight;
         startIsland = _startIsland;
         endIsland = _endIsland;
+        inPuzzleMode = _puzzleMode;
     }
 
     public static bool operator ==(Bridge b1, Bridge b2)
@@ -77,8 +78,11 @@ public static class GlobalVariables
 
     // Bridge Variables
     public static string[] allWeights = new string[0];
+    public static Dictionary<GameObject, List<GameObject>> bridgeBuildParts = new();
+    public static Dictionary<GameObject, Vector3> bridgeSegmentOriginalPositions = new();
     public static Bridge[] possibleBridges = new Bridge[0];
     public static List<GameObject> bridgeObjects = new();
+    public static List<GameObject> bridgeSegments = new();
     public static int m_totalIslands = 0;
 
     // LevelCompleteCheck Variables
