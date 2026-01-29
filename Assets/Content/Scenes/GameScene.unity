@@ -14880,6 +14880,7 @@ MonoBehaviour:
   bridgeMask:
     serializedVersion: 2
     m_Bits: 8
+  focusPointObj: {fileID: 1095189864}
 --- !u!82 &2113406663
 AudioSource:
   m_ObjectHideFlags: 0

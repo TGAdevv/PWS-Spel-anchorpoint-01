@@ -23,10 +23,14 @@ public class OrbitalCamera : MonoBehaviour
 
     bool moveCamera;
     Camera cam;
+    public GameObject focusPointObj;
+    Vector3 angleBeforePuzzle;
+    Vector3 posBeforePuzzle;
 
     private void Start()
     {
         cam = Camera.main;
+        focusPointObj.transform.SetParent(null, true);
     }
 
     private void LateUpdate()
@@ -35,6 +39,12 @@ public class OrbitalCamera : MonoBehaviour
         bool inPuzzleMode = IsAnyBridgeInPuzzleMode();
         if (!inPuzzleMode)
         {
+            //if not in puzzle mode, it could be just exited puzzle mode, so restore previous camera position (doesn't matter if puzzle mode was never entered)
+            if (focusPointObj.transform.eulerAngles != angleBeforePuzzle && cam.transform.position != posBeforePuzzle)
+            {
+                focusPointObj.transform.eulerAngles = angleBeforePuzzle;
+                focusPointObj.transform.position = posBeforePuzzle;
+            }
             curAngle += AngleVel;
 
             if (!Input.GetMouseButton(0))
@@ -60,6 +70,22 @@ public class OrbitalCamera : MonoBehaviour
             {
                 Vector2 deltaMouse = Input.mousePositionDelta;
                 AngleVel = new Vector2(-deltaMouse.y, deltaMouse.x) * rotationSpeed;
+            }
+            angleBeforePuzzle = focusPointObj.transform.eulerAngles;
+            posBeforePuzzle = focusPointObj.transform.position;
+        } else
+        {
+            //if in puzzle mode, set camera transform to center of bridge and look down at it
+            Vector3 bridgeCenter = Vector3.zero;
+            foreach (var bridge in FindObjectsByType<ClickToCreateBridge>(FindObjectsSortMode.None))
+            {
+                if (bridge.IsInPuzzleMode())
+                {
+                    Renderer bridgeRenderer = bridge.GetComponent<Renderer>();
+                    bridgeCenter = bridgeRenderer.bounds.center;
+                    focusPointObj.transform.position = bridgeCenter + new Vector3(0, 50, 0);
+                    focusPointObj.transform.eulerAngles = new Vector3(90, 0, 0);
+                }
             }
         }
 

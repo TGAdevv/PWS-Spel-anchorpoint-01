@@ -295,6 +295,7 @@ public class LevelImporter : MonoBehaviour
                 // Store the original bridge segment position for snapping
                 Vector3 originalPosition = segmentBridge.transform.localPosition;
                 GlobalVariables.bridgeSegmentOriginalPositions[segmentBridge] = originalPosition;
+                Bridges.Add(segmentSpline);
                 segmentBridge.SetActive(false);
             }
         }
