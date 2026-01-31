@@ -211,7 +211,7 @@ public class HintManager : MonoBehaviour
                         for (int i = 0; i < bridgesInShortestPath.Count; i++)
                         {
                             Bridge bridgeIndex = bridgesInShortestPath[i];
-                            if (!bridgeIndex.activated)
+                            if (!bridgeIndex.activated && !bridgeIndex.inPuzzleMode)
                             {
                                 inactiveBridgesInShortestPath.Add(bridgesInShortestPath[i]);
                             }

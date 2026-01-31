@@ -22,7 +22,7 @@ public class ClickToCreateBridge : MonoBehaviour
 
     // Puzzle mode variables
     private bool isParentBridge = false;
-    private bool inPuzzleMode = false;
+    private bool inPuzzleMode;
     private List<GameObject> segmentBridges = new();
     private Dictionary<GameObject, Vector3> originalSegmentPositions = new();
     private HashSet<GameObject> snappedSegments = new();
@@ -43,7 +43,7 @@ public class ClickToCreateBridge : MonoBehaviour
             segmentBridges = GlobalVariables.bridgeBuildParts[gameObject];
             foreach (var segment in segmentBridges)
             {
-                // Get original position from GlobalVariables if available, otherwise use current position
+                // Get original position from GlobalVariables
                 if (GlobalVariables.bridgeSegmentOriginalPositions != null && GlobalVariables.bridgeSegmentOriginalPositions.ContainsKey(segment))
                     originalSegmentPositions[segment] = GlobalVariables.bridgeSegmentOriginalPositions[segment];
             }
@@ -60,14 +60,14 @@ public class ClickToCreateBridge : MonoBehaviour
             return;
 
         // Handle parent bridge click to start puzzle mode
-        if (isParentBridge && !inPuzzleMode && !targetBridgeActive)
+        if (isParentBridge && !GlobalVariables.puzzleModeActive && !targetBridgeActive)
         {
             EnterPuzzleMode();
             return;
         }
 
         // Don't allow building/destroying blocks while in puzzle mode
-        if (inPuzzleMode)
+        if (GlobalVariables.puzzleModeActive)
             return;
 
         // Normal bridge creation logic
@@ -99,7 +99,11 @@ public class ClickToCreateBridge : MonoBehaviour
 
     private void EnterPuzzleMode()
     {
+        if (inPuzzleMode)
+            return;
+        Debug.Log("Entering puzzle mode for bridge between islands " + startIsland + " and " + endIsland + inPuzzleMode);
         inPuzzleMode = true;
+        GlobalVariables.puzzleModeActive = true;
         snappedSegments.Clear();
         
         // Make parent bridge see-through during puzzle
@@ -152,6 +156,7 @@ public class ClickToCreateBridge : MonoBehaviour
     private void ExitPuzzleMode()
     {
         inPuzzleMode = false;
+        GlobalVariables.puzzleModeActive = false;
         currentlyDraggingSegment = null;
         // Hide segment bridges and disable their colliders
         foreach (var segment in segmentBridges)

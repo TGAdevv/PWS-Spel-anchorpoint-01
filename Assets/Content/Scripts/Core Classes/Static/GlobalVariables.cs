@@ -85,11 +85,12 @@ public static class GlobalVariables
     public static List<GameObject> bridgeSegments = new();
     public static int m_totalIslands = 0;
 
-    // LevelCompleteCheck Variables
+    // LevelCompleteCheck and puzzle Variables
     public static int m_requiredBlocks = -1;
     public static int m_multiplechoiceconnection = -1;
     public static uint neededweight = 0;
     public static uint SelectedWeightOption = 0;
+    public static bool puzzleModeActive = false;
 
     
     // ------------------------------
