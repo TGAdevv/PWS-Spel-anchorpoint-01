@@ -4987,34 +4987,45 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Chapters:
   - Title: Welkom bij Bridge Connect!
-    ChapterContent: "<b>Het Eerste Level</b>\nWelkom bij de allereerste level! Het
-      spel is opgedeeld in 3 delen. In het eerste deel moet je alle eilanden bereikbaar
-      maken, met <b>zo min mogelijk bouwblokken</b>. Dit moet je doen door bruggen
-      te bouwen. Als je klikt op een brug dan wordt die brug gebouwd, als je op een
-      gebouwde brug klikt word hij vernietigd. De getalletjes boven de bruggen geven
-      aan hoeveel bouwblokken ze kosten. \n<b>Veel succes!</b>\n\nNote: Alle huidige
-      tekst in het theorieblok is tijdelijk en nog niet volledig uitgewerkt."
+    ChapterContent: "<b>De eerste paar levels</b>\n\nWelkom bij de eerste paar levels!
+      Het spel is opgedeeld in 3 delen. In het eerste deel moet je alle eilanden
+      bereikbaar maken, met <b>zo min mogelijk bouwblokken</b>. Dit moet je doen
+      door bruggen te bouwen. Als je klikt op een brug dan krijg je de optie om de
+      brug te bouwen, als je op een gebouwde brug klikt word hij vernietigd. \n\nDe
+      getalletjes boven de bruggen geven aan hoeveel bouwblokken ze kosten. Probeer
+      telkens het doel van het level zo goed mogelijk te halen. Een optimaal antwoord
+      geeft je <b>drie sterren</b>. Probeer dit steeds te halen, omdat je hiermee
+      <b>munten</b> kan halen. Deze zijn later in de game belangrijk. \n\nVoor meer
+      informatie over hoe je de levels kan halen kun je kijken onder het kopje \"algemene
+      grafentheorie\", voor het stappenplan voor dit deel van de game moet je onder
+      <b>\"Deel 1\"</b> kijken.\n<b>Veel succes!</b>"
     SetAtLevel: 0
   - Title: Hulp Nodig?
     ChapterContent: "Als je ooit een level tegemoet komt waarvan je de oplossing
       \xE9cht niet kan vinden, kan je <b>een hint kopen</b>. Een hint kost <b>15
       muntjes</b>, en je koopt een hint door op de gele knop te drukken."
     SetAtLevel: 3
-  - Title: Nieuw Deel
-    ChapterContent: Je bent nu bij het tweede deel aangekomen, <b>lekker bezig</b>!
-      Bij het tweede onderdeel gaan we werken met processen. Je moet dus <b>het langste
-      proces vinden van start naar eind</b> en de <b>waarde invullen die zo dicht
-      bij die waarde komt als mogelijk, zonder erboven te komen</b>.
+  - Title: Een nieuw type level
+    ChapterContent: "Je bent nu bij het tweede deel aangekomen, <b>lekker bezig</b>!
+      \n\nBij het tweede onderdeel gaan we werken met processen. Hierbij moet je
+      kijken wat de hoogste waarde van de in te vullen brug kan zijn zonder dat een
+      verbinding van begin naar eind door deze brug de langzaamste is. Voor meer
+      informatie over hoe je dit kan doen kun je de algemene grafentheorie raadplegen
+      onder <b>\"Deel 2\"</b>. Kies steeds het juiste antwoord onder de gegeven opties.\n\nVergeet
+      niet dat je nog steeds hints kan kopen met je behaalde munten. Deze kunnen
+      handig zijn als je vastloopt op een level."
     SetAtLevel: 6
   - Title: Typ Hier
     ChapterContent: Vanaf nu moet je jouw antwoord typen, in plaats van te kiezen
-      uit een selectie.
+      uit een selectie. Verder is het hetzelfde proces als de vorige 3 levels
     SetAtLevel: 9
   - Title: Laatste Deel
-    ChapterContent: Je bent nu bij het laatste deel aangekomen, <b>dat doe je goed</b>!
-      Bij het laatste onderdeel moet je de <b>snelste route zien te vinden van start
-      naar eind</b>. Hiervoor kan je weer op de bruggen klikken om ze te bouwen,
-      en te vernietigen door er weer op te klikken.
+    ChapterContent: "Je bent nu bij het laatste deel aangekomen, <b>dat doe je goed</b>!
+      \n\nBij het laatste onderdeel moet je de <b>snelste route zien te vinden van
+      start naar eind</b>. Hiervoor kan je weer op de bruggen klikken om ze te bouwen,
+      en te vernietigen door er weer op te klikken. Voor het stappenplan voor dit
+      gedeelte van de game kun je bij <b>\"Deel 3\"</b> van de algemene grafentheorie
+      kijken."
     SetAtLevel: 12
   Title: {fileID: 138488801}
   ChapterContent: {fileID: 1161864047}
@@ -12859,7 +12870,29 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Dit is het stukje voor algemene grafen theorie.
+  m_text: "Dit is het stukje voor algemene grafen theorie.\n\nDeel 1. Het bereiken
+    van alle eilanden\nStappenplan:\n1. Zet de waardes van verbindingen op volgorde
+    van laag naar hoog\n2. Pak de laagste waarde waarbij er geen cirkel wordt gemaakt
+    \n(dat je op een eiland kan beginnen en weer kan eindigen op hetzelfde eiland
+    door bruggen maar 1 keer te nemen)\n3. Herhaal stap 2 tot alle eilanden met elkaar
+    verbonden zijn\n\nDeel 2. Het optimaliseren van een proces\nStappenplan:\n1.
+    Kijk wat de langzaamste route is voor een route die niet door verbinding x heen
+    gaat.\n2. Kijk wat de langzaamste route is voor een route die wel door verbinding
+    x heen gaat. Neem hierbij voor verbinding x de waarde 0.\n3. Trek de waarde die
+    je bij stap 1 hebt gevonden van die van stap 2 af, dit is de maximale waarde
+    die verbinding x kan hebben zonder dat een route door verbinding x de langzaamste
+    route is.\n\nDeel 3. Het vinden van de kortste route\nStappenplan:\n1. Neem als
+    begineiland het eiland met de laagste huidige waarde die je nog niet gebruikt
+    hebt (het begineiland heeft in het begin waarde 0\n2. Voor elke verbinding die
+    dit eiland heeft, bepaal of de huidige waarde van jouw begineiland + de waarde
+    van de verbinding lager is dan de huidige waarde van het eiland waar de verbinding
+    naartoe gaat.\na. Als dit zo is, vervang de huidige waarde van het eiland waar
+    de verbinding naartoe gaat door de waarde van jouw begineiland + de waarde van
+    de verbinding. Geef ook bij het eiland waar de verbinding naartoe gaat aan hoe
+    je er gekomen bent\nb. Als dit niet zo is verander je niks\n3. Herhaal stap 1
+    en 2 tot het ongebruikte eiland met de laagste waarde het eindeiland is.\n4.
+    Herleid de kortste route door van het eindeiland steeds terug te gaan naar het
+    eiland waar je vandaan kwam.\n"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: fecf210bbefdf59448cfec68741397d7, type: 2}
   m_sharedMaterial: {fileID: -9139734996823397569, guid: fecf210bbefdf59448cfec68741397d7, type: 2}
