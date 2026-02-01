@@ -7490,7 +7490,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_UiScaleMode: 1
-  m_ReferencePixelsPerUnit: 100
+  m_ReferencePixelsPerUnit: 30
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 1000, y: 1000}
   m_ScreenMatchMode: 0
@@ -8313,7 +8313,8 @@ MonoBehaviour:
   IslandScripts: []
   DragIsland: 0
   islandPrefab: {fileID: 7428582695177614278, guid: 42bf3aeb331df7147bf7d7ae1fa8e0af, type: 3}
-  UnitSize: 10
+  UnitSize: 30
+  LevelScaleMod: 40
   canvas: {fileID: 1297450710}
   levelImporter: {fileID: 1834600990}
   BuildingBlocksSlider: {fileID: 999491004}
@@ -10870,6 +10871,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9b109e062cb28c4498cbbaabe75ef706, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  GoToUncompletedLevelsButton: {fileID: 0}
+  HideAllUI:
+    m_PersistentCalls:
+      m_Calls: []
+  ShowAllUI:
+    m_PersistentCalls:
+      m_Calls: []
+  ShowNotAllLevelsCompleteScreen:
+    m_PersistentCalls:
+      m_Calls: []
   levels:
   - -3.925439,0.4929295,2,1;-0.6482378,0.5221915,1,2;-2.307097,1.910954,3,3;-4.63063,-1.495496,6,2;-0.3693694,-1.82883,3,3_12,2,-3.658716,0.7596525,-3.658716,1.100436,-3.44805,1.377508,-3.107266,1.377508;16,2,-3.391993,0.4929295,-2.87824,0.4929295,-2.307097,0.5970314,-2.307097,1.110785;26,1,-3.658716,0.2262065,-3.658716,-1.016445,-0.6482378,-1.253906,-0.6482378,-0.01125455;0,3,-4.192162,0.2262065,-4.192162,-0.3423823,-4.897353,-0.393461,-4.897353,-0.9620497/0,4,-0.3815148,0.2554685,-0.3815148,0.2554685,0.1640766,-0.4545285,0.1640766,-1.028661;0,4,-0.3815148,0.7889144,-0.3815148,0.7889144,1.351318,-1.295384,0.4307996,-1.295384/32,1,-1.506928,1.377508,-1.129571,1.377508,-0.6482378,1.432994,-0.6482378,1.055637;11,1,-1.773651,1.110785,-1.773651,0.7334281,-0.9149607,0.7889144,-0.9149607,0.7889144/19,1,-3.030292,-1.228773,-1.966939,-1.228773,-0.9149607,0.2554685,-0.9149607,0.2554685;0,4,-3.030292,-1.762219,-2.264106,-1.762219,-1.935724,-1.82883,-1.169538,-1.82883//_1579,888
   IslandsParent: {fileID: 926814447}
@@ -10889,7 +10900,13 @@ MonoBehaviour:
   - {fileID: 8914569841777822226, guid: 1b07c735ccfcc8e4180ce3cf385c4814, type: 3}
   CameraCanvas: {fileID: 1909264286}
   MenuPricePrefab: {fileID: 3517048720009562065, guid: beee0f17e26f4714cb39bc742ef8fac1, type: 3}
+  HourIndPrefab: {fileID: 1701731821077183159, guid: 70dd162801d40b843924db07b04e3960, type: 3}
   MenuPriceVarPrefab: {fileID: 9108944266141725765, guid: c5f9ed4daf040a94293cb721b64f8735, type: 3}
+  MenuPriceVarPrefabInputField: {fileID: 3582791581423286751, guid: faba390bd49d769438ce9b6b07675966, type: 3}
+  BasicWidget: {fileID: 2835277383088639347, guid: 70ebf77c63091a544a2aea14f6355a85, type: 3}
+  buildBridge: {fileID: 0}
+  destroyBridge: {fileID: 0}
+  bridgeSnap: {fileID: 0}
   LoadScreenUI: {fileID: 1745015029}
   currentLevel: 0
   startIsland: -1
@@ -10897,6 +10914,7 @@ MonoBehaviour:
   OnImported:
     m_PersistentCalls:
       m_Calls: []
+  LevelFinishedChecker: {fileID: 0}
   axisPrefab: {fileID: 4953790837173096716, guid: 8b50d00b1e9e2ac4cb909c0460a02e29, type: 3}
 --- !u!4 &1834600991
 Transform:

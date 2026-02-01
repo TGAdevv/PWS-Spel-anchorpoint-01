@@ -3,6 +3,7 @@ using UnityEngine;
 public class UpdateLevelText : MonoBehaviour
 {
     TMPro.TMP_Text lvlTMP;
+    readonly string Alphabet = "abcdefghijklmnopqrstuvwxyz";
 
     private void Start()
     {
@@ -13,6 +14,7 @@ public class UpdateLevelText : MonoBehaviour
 
     public void Tick()
     {
-        lvlTMP.text = "Level " + (GlobalVariables.m_Level + 1);
+        int levelCategory = Mathf.FloorToInt(GlobalVariables.m_Level / 6);
+        lvlTMP.text = "Level " + (GlobalVariables.m_Level % 6 + 1) + Alphabet[levelCategory];
     }
 }

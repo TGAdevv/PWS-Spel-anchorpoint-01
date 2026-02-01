@@ -4,6 +4,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
+using UnityEngine.Events;
 
 public class ClickToCreateBridge : MonoBehaviour
 {
@@ -19,8 +20,10 @@ public class ClickToCreateBridge : MonoBehaviour
 
     public AudioSource buildBridgeSFX;
     public AudioSource destroyBridgeSFX;
+    public AudioSource bridgeSnap;
 
     // Puzzle mode variables
+    public UnityEvent HideAllUI, ShowAllUI;
     private bool isParentBridge = false;
     private bool inPuzzleMode;
     private List<GameObject> segmentBridges = new();
@@ -51,6 +54,9 @@ public class ClickToCreateBridge : MonoBehaviour
     }
     private void OnMouseDown()
     {
+        if (GlobalVariables.inPuzzleMode && !inPuzzleMode)
+            return;
+
         EventSystem currentEventSys = EventSystem.current;
         PointerEventData eventData = new(currentEventSys);
         eventData.position = Input.mousePosition;
@@ -60,14 +66,14 @@ public class ClickToCreateBridge : MonoBehaviour
             return;
 
         // Handle parent bridge click to start puzzle mode
-        if (isParentBridge && !GlobalVariables.puzzleModeActive && !targetBridgeActive)
+        if (isParentBridge && !GlobalVariables.inPuzzleMode && !targetBridgeActive)
         {
             EnterPuzzleMode();
             return;
         }
 
         // Don't allow building/destroying blocks while in puzzle mode
-        if (GlobalVariables.puzzleModeActive)
+        if (GlobalVariables.inPuzzleMode)
             return;
 
         // Normal bridge creation logic
@@ -101,9 +107,10 @@ public class ClickToCreateBridge : MonoBehaviour
     {
         if (inPuzzleMode)
             return;
-        Debug.Log("Entering puzzle mode for bridge between islands " + startIsland + " and " + endIsland + inPuzzleMode);
+        HideAllUI.Invoke();
+
+        GlobalVariables.inPuzzleMode = true;
         inPuzzleMode = true;
-        GlobalVariables.puzzleModeActive = true;
         snappedSegments.Clear();
         
         // Make parent bridge see-through during puzzle
@@ -126,7 +133,7 @@ public class ClickToCreateBridge : MonoBehaviour
             
             // Enable all components
             renderer.enabled = true;
-            segment.gameObject.SetActive(true);
+            segment.SetActive(true);
 
             validSegments++;
         }
@@ -136,7 +143,7 @@ public class ClickToCreateBridge : MonoBehaviour
         {
             if (segment == null) continue;
 
-            Vector3 randomPos = new Vector3(segment.transform.localPosition.x + Random.Range(-15f, 15f), 0, segment.transform.localPosition.z + Random.Range(-15f, 15f));
+            Vector3 randomPos = new(segment.transform.localPosition.x + Random.Range(-15f, 15f), 0, segment.transform.localPosition.z + Random.Range(-15f, 15f));
             randomPos.y += raiseHeight; // Raise by default
             segment.transform.localPosition = randomPos;
         }
@@ -155,8 +162,10 @@ public class ClickToCreateBridge : MonoBehaviour
 
     private void ExitPuzzleMode()
     {
+        ShowAllUI.Invoke();
+
+        GlobalVariables.inPuzzleMode = false;
         inPuzzleMode = false;
-        GlobalVariables.puzzleModeActive = false;
         currentlyDraggingSegment = null;
         // Hide segment bridges and disable their colliders
         foreach (var segment in segmentBridges)
@@ -202,7 +211,7 @@ public class ClickToCreateBridge : MonoBehaviour
     Vector2 mousePos = Input.mousePosition;
     Ray screenRay = cam.ScreenPointToRay(mousePos);
 
-    Plane xzPlane = new Plane(Vector3.up, 0f); // Y = 0 plane
+    Plane xzPlane = new(Vector3.up, 0f); // Y = 0 plane
     if (!xzPlane.Raycast(screenRay, out float planeEnter))
         return;
 
@@ -215,7 +224,7 @@ public class ClickToCreateBridge : MonoBehaviour
     // START DRAG
     if (Input.GetMouseButtonDown(0) && currentlyDraggingSegment == null)
     {
-        Ray downRay = new Ray(rayStart, Vector3.down);
+        Ray downRay = new(rayStart, Vector3.down);
 
         if (Physics.Raycast(downRay, out RaycastHit hit, 200f))
         {
@@ -247,8 +256,8 @@ public class ClickToCreateBridge : MonoBehaviour
 
         Vector3 targetPos = transform.position;
 
-        Vector3 droppedXZ = new Vector3(droppedPos.x, 0, droppedPos.z);
-        Vector3 targetXZ = new Vector3(targetPos.x, 0, targetPos.z);
+        Vector3 droppedXZ = new(droppedPos.x, 0, droppedPos.z);
+        Vector3 targetXZ = new(targetPos.x, 0, targetPos.z);
 
         float dist = Vector3.Distance(droppedXZ, targetXZ);
 
@@ -309,9 +318,14 @@ public class ClickToCreateBridge : MonoBehaviour
                 snappedCount++;
             }
         }
-        
+
         if (snappedCount == segmentBridges.Count)
             ExitPuzzleMode();
+        else
+        {
+            bridgeSnap.pitch = Random.Range(.9f, 1.1f);
+            bridgeSnap.Play();
+        }
     }
 
     public bool IsInPuzzleMode()

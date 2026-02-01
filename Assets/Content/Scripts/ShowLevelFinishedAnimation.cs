@@ -42,6 +42,21 @@ public class ShowLevelFinishedAnimation : MonoBehaviour
     //                                     0 Stars->0 coins, 1 Star->2 coins etc
     readonly uint[] CoinRewardPerStarCount = new uint[4] { 0, 2, 3, 5 };
 
+    Train AnimateTrain(ref Train train)
+    {
+        Vector3 originalTrainScale = TrainPrefab.transform.localScale;
+
+        train.t = Mathf.Min(train.t + (Time.deltaTime / train.Duration), 1);
+
+        Vector3 p = train.Spline.SamplePointInCurve(train.t);
+        Vector3 pDeriv = train.Spline.SamplePointInCurve(train.t + train.Spline.d) - p;
+
+        train.TrainOBJ.transform.SetPositionAndRotation(p, Quaternion.LookRotation(pDeriv));
+        train.TrainOBJ.transform.localScale = originalTrainScale * (1 - 16 * Mathf.Pow(train.t - .5f, 4));
+
+        return train;
+    }
+
     public IEnumerator LevelFinished(int StarCount)
     {
         ShowStar[0].Invoke();
@@ -65,9 +80,12 @@ public class ShowLevelFinishedAnimation : MonoBehaviour
             foreach (var bridgeOBJ in GlobalVariables.bridgeObjects)
             {
                 SplineEditor splineScript = bridgeOBJ.GetComponent<SplineEditor>();
-
                 if (splineScript.curveLength > maxCurveLength)
                     maxCurveLength = splineScript.curveLength;
+
+                ClickToCreateBridge ClickToCreate = bridgeOBJ.GetComponent<ClickToCreateBridge>();
+                if (ClickToCreate)
+                    Destroy(ClickToCreate);
             }
 
             for (int i = GlobalVariables.bridgeObjects.Count - 1; i >= 0; i--)
@@ -101,11 +119,11 @@ public class ShowLevelFinishedAnimation : MonoBehaviour
                 {
                     if (TrainOBJs[i].t >= 1 || !TrainOBJs[i])
                         continue;
-
+                    //AnimationDone = false;
                     Train train = TrainOBJs[i];
 
-                    AnimationDone = false;
                     train.t = Mathf.Min(train.t + (Time.deltaTime / train.Duration), 1);
+                    print("t: " + train.t);
 
                     Vector3 p = train.Spline.SamplePointInCurve(train.t);
                     Vector3 pDeriv = train.Spline.SamplePointInCurve(train.t + train.Spline.d) - p;
@@ -122,6 +140,63 @@ public class ShowLevelFinishedAnimation : MonoBehaviour
                     continue;
 
                 Destroy(TrainOBJs[i].TrainOBJ);
+            }
+        }
+        if (GlobalVariables.m_LevelGoal == LevelGoal.OPTIMIZE_PROCESS)
+        {
+            SceneWidgets.ClearAll();
+            List <List<Vector3Int>> Routes = checkIfLevelFinished.AllRoutes;
+            print(Routes.Count + " vs " + checkIfLevelFinished.AllRoutes.Count);
+            List<Train> TrainOBJs = new(Routes.Count * 2);
+            int[] RouteIndexPerTrain = new int[Routes.Count];
+
+            for (int i = 0; i < Routes.Count; i++)
+            {
+                RouteIndexPerTrain[i] = 0;
+                int bridgeIndex = Routes[i][0].y;
+
+                print("Made train object");
+
+                TrainOBJs.Add(new(
+                    Instantiate(TrainPrefab),
+                    0,
+                    GlobalVariables.bridgeObjects[bridgeIndex].GetComponent<SplineEditor>(),
+                    GlobalVariables.possibleBridges[bridgeIndex].weight
+                ));
+            }
+
+            bool AnimationDone = false;
+            int frame = 0;
+            while (!AnimationDone)
+            {
+                frame++;
+
+                AnimationDone = true;
+                for (int i = 0; i < TrainOBJs.Count; i++)
+                {
+                    if (!TrainOBJs[i])
+                        continue;
+
+                    if (TrainOBJs[i].t >= 1)
+                    {
+                        RouteIndexPerTrain[i]++;
+                        if (RouteIndexPerTrain[i] >= Routes[i].Count)
+                            continue;
+                        int bridgeIndex = Routes[i][RouteIndexPerTrain[i]].y;
+                        TrainOBJs[i] = new(
+                            Instantiate(TrainPrefab),
+                            0,
+                            GlobalVariables.bridgeObjects[bridgeIndex].GetComponent<SplineEditor>(),
+                            GlobalVariables.possibleBridges[bridgeIndex].weight
+                        );
+                    }
+
+                    //AnimationDone = false;
+                    Train train = TrainOBJs[i];
+                    AnimateTrain(ref train);
+                    TrainOBJs[i] = train;
+                }
+                yield return new WaitForEndOfFrame();
             }
         }
 

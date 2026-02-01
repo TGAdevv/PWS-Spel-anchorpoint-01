@@ -9,6 +9,7 @@ public class CheckIfLevelFinished : MonoBehaviour
 {
     public UnityEvent OnLevelNotFinished;
     public ShowLevelFinishedAnimation ShowLevelFinishedAnimation;
+    public LevelBarManager levelBarManager;
 
     [NonSerialized] public int currentLvlRoutes = 0;
 
@@ -230,6 +231,7 @@ public class CheckIfLevelFinished : MonoBehaviour
 
         //if (GlobalVariables.m_LevelGoal == LevelGoal.OPTIMIZE_PROCESS) currentLvlRoutes++;
 
+        levelBarManager.LevelCompleted(starCount);
         StartCoroutine(ShowLevelFinishedAnimation.LevelFinished(starCount));
     }
 }

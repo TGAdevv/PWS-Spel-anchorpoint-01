@@ -6,11 +6,18 @@ using System.Threading;
 using UnityEngine;
 using System.Linq;
 using UnityEngine.Events;
+using UnityEngine.UI;
 using UnityEngine.InputSystem;
 
 public class LevelImporter : MonoBehaviour
 {
+    public Button GoToUncompletedLevelsButton;
+
+    public UnityEvent HideAllUI, ShowAllUI;
+    public UnityEvent ShowNotAllLevelsCompleteScreen;
     public string[] levels;
+
+    [System.NonSerialized] public LevelBarManager levelBarManager;
 
     public Transform IslandsParent;
     public Transform BridgesParent;
@@ -40,6 +47,7 @@ public class LevelImporter : MonoBehaviour
 
     public AudioClip buildBridge;
     public AudioClip destroyBridge;
+    public AudioClip bridgeSnap;
 
     public GameObject LoadScreenUI;
 
@@ -81,14 +89,57 @@ public class LevelImporter : MonoBehaviour
 
     public void ImportNextLevel()
     {
-        currentLevel++;
-        if (currentLevel >= levels.Length)
+        int category = Mathf.FloorToInt(currentLevel / 6);
+
+        int lastIndexIncomplete = -1;
+        int firstIndexIncomplete = -1;
+        bool AllLevelsPlayed = true;
+
+        for (int i = category * 6; i < category * 6 + 6; i++)
         {
-            currentLevel--;
-            Debug.LogWarning("Tried to load next level on last level");
+            if (levelBarManager.LevelStatusses[i] == LevelBarManager.LevelStatus.Locked)
+                AllLevelsPlayed = false;
+
+            if (levelBarManager.LevelStatusses[i] == LevelBarManager.LevelStatus.Incomplete)
+            {
+                lastIndexIncomplete = i;
+
+                if (firstIndexIncomplete == -1)
+                    firstIndexIncomplete = i;
+            }
+        }
+
+        if (AllLevelsPlayed && lastIndexIncomplete != -1)
+        {
+            if (currentLevel >= lastIndexIncomplete)
+            {
+                ShowNotAllLevelsCompleteScreen.Invoke();
+                GoToUncompletedLevelsButton.onClick.RemoveAllListeners();
+                GoToUncompletedLevelsButton.onClick.AddListener(new(delegate { ImportLevel(firstIndexIncomplete); }));
+                return;
+            }
+
+            for (int i = currentLevel + 1; i <= lastIndexIncomplete; i++)
+            {
+                if (levelBarManager.LevelStatusses[i] == LevelBarManager.LevelStatus.Incomplete)
+                {
+                    ImportLevel(i);
+                    return;
+                }
+            }
+
+            Debug.LogError("Couldnt find incomplete level");
+            ImportLevel(firstIndexIncomplete);
             return;
         }
-        ImportLevel(currentLevel);
+
+        if (AllLevelsPlayed)
+        {
+            ImportLevel(category * 6 + 6);
+            return;
+        }
+
+        ImportLevel(currentLevel + 1);
     }
 
     GameObject InstantiateIsland(GameObject island, int i, int j, Vector2Int size, float unitSize)
@@ -186,6 +237,8 @@ public class LevelImporter : MonoBehaviour
             clickToCreateBridge.price = weight[0];
             clickToCreateBridge.startIsland = index.x;
             clickToCreateBridge.endIsland = index.y;
+            clickToCreateBridge.ShowAllUI = ShowAllUI;
+            clickToCreateBridge.HideAllUI = HideAllUI;
 
             AudioSource BuildSFX = newBridge.AddComponent<AudioSource>();
             BuildSFX.volume = .5f;
@@ -196,6 +249,11 @@ public class LevelImporter : MonoBehaviour
             DestroySFX.volume = .5f;
             DestroySFX.clip = destroyBridge;
             clickToCreateBridge.destroyBridgeSFX = DestroySFX;
+
+            AudioSource BridgeSnap = newBridge.AddComponent<AudioSource>();
+            BridgeSnap.volume = .5f;
+            BridgeSnap.clip = bridgeSnap;
+            clickToCreateBridge.bridgeSnap = BridgeSnap;
         }
 
         if (GlobalVariables.m_LevelGoal == LevelGoal.OPTIMIZE_PROCESS)
@@ -407,7 +465,7 @@ public class LevelImporter : MonoBehaviour
 
         // Parse building blocks: fifth part if exists, otherwise keep default
         if (parts.Length > 4) {
-            if (!string.IsNullOrWhiteSpace(parts[4])) {
+            if (!string.IsNullOrWhiteSpace(parts[4]) && !axisPrefab) {
                 GlobalVariables.m_requiredBlocks = int.Parse(parts[4]);
                 GlobalVariables.m_Blocks = 0;
             }
@@ -496,6 +554,7 @@ public class LevelImporter : MonoBehaviour
             levelID = levels.Length - 1;
 
         GlobalVariables.m_Level = levelID;
+        currentLevel = levelID;
 
         LoadScreenUI.SetActive(true);
         LevelId = levelID;
@@ -503,5 +562,10 @@ public class LevelImporter : MonoBehaviour
         StartCoroutine(importLevel());
 
         OnImported.Invoke();
+    }
+
+    public void ReloadCurrentLevel()
+    {
+        ImportLevel(currentLevel);
     }
 }

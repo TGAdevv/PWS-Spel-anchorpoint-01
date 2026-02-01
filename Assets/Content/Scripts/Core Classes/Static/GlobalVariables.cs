@@ -66,7 +66,7 @@ public static class GlobalVariables
     //  GlobalVariables->VARIABLES
     // ------------------------------
 
-    // UI Variables
+    // Core Level Variables
     public static uint m_Coins = 0;
     public static uint m_Blocks = 0;
     public static int m_Level = 0;
@@ -90,9 +90,11 @@ public static class GlobalVariables
     public static int m_multiplechoiceconnection = -1;
     public static uint neededweight = 0;
     public static uint SelectedWeightOption = 0;
-    public static bool puzzleModeActive = false;
 
-    
+    // Click to create bridge
+    public static bool inPuzzleMode = false;
+
+
     // ------------------------------
     //  GlobalVariables->FUNCTIONS
     // ------------------------------

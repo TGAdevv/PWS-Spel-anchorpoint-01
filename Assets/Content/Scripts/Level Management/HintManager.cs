@@ -13,14 +13,9 @@ public class HintManager : MonoBehaviour
     public TMP_Text   HintText;
     public List<List<Vector3Int>> AllRoutes;
 
-    [Header("After how many req blocks should the hint switch " +
+    [Header("After how many total bridges should the hint switch \n" +
         "from revealing a single bridge to revealing the required amount of blocks")]
     public uint HintBridgeToTextThreshold;
-
-    private void Start()
-    {
-        GlobalVariables.m_Coins = 999;
-    }
 
     public void GenerateHint()
     {
@@ -33,7 +28,7 @@ public class HintManager : MonoBehaviour
         switch (GlobalVariables.m_LevelGoal)
         {
             case LevelGoal.CONNECT_ALL_ISLANDS:
-                if (req_blocks >= HintBridgeToTextThreshold)
+                if (GlobalVariables.possibleBridges.Length >= HintBridgeToTextThreshold)
                 {
                     HintText.text = $"Er zijn in totaal {req_blocks} blokken nodig";
                     ShowHintPanel.Invoke();
@@ -41,8 +36,8 @@ public class HintManager : MonoBehaviour
                 }
                 else
                 {
-                    List<uint> weights = new List<uint>();
-                    List<bool> activated = new List<bool>();
+                    List<uint> weights = new();
+                    List<bool> activated = new();
                     foreach (var bridge in GlobalVariables.possibleBridges)
                     {
                         weights.Add(bridge.weight);
@@ -92,7 +87,7 @@ public class HintManager : MonoBehaviour
                                         }
                                     }
                                 }
-                                HashSet<int> visited = new HashSet<int>();
+                                HashSet<int> visited = new();
                                 DFS(bridge.startIsland, visited, -1);
                                 if (createsCircle) {
                                     //revert internal value of bridge to inactive
@@ -122,7 +117,7 @@ public class HintManager : MonoBehaviour
                 }
                 break;
             case LevelGoal.FIND_SHORTEST_ROUTE:
-                if (req_blocks >= HintBridgeToTextThreshold)
+                if (GlobalVariables.possibleBridges.Length >= HintBridgeToTextThreshold)
                 {
                     HintText.text = $"Er zijn in totaal {req_blocks} blokken nodig";
                     ShowHintPanel.Invoke();
@@ -131,10 +126,10 @@ public class HintManager : MonoBehaviour
                 else
                 {
                     // Store bridge data in arrays
-                    List<uint> weights = new List<uint>();
-                    List<int> startIslands = new List<int>();
-                    List<int> endIslands = new List<int>();
-                    List<bool> activated = new List<bool>();
+                    List<uint> weights = new();
+                    List<int> startIslands = new();
+                    List<int> endIslands = new();
+                    List<bool> activated = new();
                     foreach (var bridge in GlobalVariables.possibleBridges)
                     {
                         weights.Add(bridge.weight);
@@ -189,8 +184,8 @@ public class HintManager : MonoBehaviour
                         currentPath.RemoveAt(currentPath.Count - 1);
                         }
                     ShortestRouteDFS(GlobalVariables.m_startIsland, GlobalVariables.m_endIsland, 0, new HashSet<int>(), new List<int>());
-                    List<Bridge> bridgesInShortestPath = new List<Bridge>();
-                    List<Bridge> inactiveBridgesInShortestPath = new List<Bridge>();
+                    List<Bridge> bridgesInShortestPath = new();
+                    List<Bridge> inactiveBridgesInShortestPath = new();
                     if (shortestPath != null)
                     {
                         for (int i = 0; i < shortestPath.Count - 1; i++)

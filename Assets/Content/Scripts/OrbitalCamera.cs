@@ -9,6 +9,8 @@ public class OrbitalCamera : MonoBehaviour
     public float smoothTime;
     public float scaleSpeed;
 
+    public AudioSource SwooshSFX;
+
     [Range(0, 50)]
     public int minZoom = 5;
     [Range(100, 300)]
@@ -17,39 +19,40 @@ public class OrbitalCamera : MonoBehaviour
     Vector2 curAngle = new(10, 0);
     Vector2 AngleVel = new(10, 0);
 
-    Vector2 vel = new();
+    Vector2 vel2d = new();
+    Vector3 vel3d = new();
 
     public LayerMask bridgeMask;
 
     bool moveCamera;
     Camera cam;
-    public GameObject focusPointObj;
     Vector3 angleBeforePuzzle;
     Vector3 posBeforePuzzle;
 
     private void Start()
     {
         cam = Camera.main;
-        focusPointObj.transform.SetParent(null, true);
+        focusPoint.SetParent(null, true);
     }
+
+    bool firstFramePuzzleMode = true;
 
     private void LateUpdate()
     {
-        // Check if any bridge is in puzzle mode
-        bool inPuzzleMode = IsAnyBridgeInPuzzleMode();
-        if (!inPuzzleMode)
+        if (!GlobalVariables.inPuzzleMode)
         {
             //if not in puzzle mode, it could be just exited puzzle mode, so restore previous camera position (doesn't matter if puzzle mode was never entered)
-            if (focusPointObj.transform.eulerAngles != angleBeforePuzzle && cam.transform.position != posBeforePuzzle)
+            if (focusPoint.eulerAngles != angleBeforePuzzle && cam.transform.position != posBeforePuzzle)
             {
-                focusPointObj.transform.eulerAngles = angleBeforePuzzle;
-                focusPointObj.transform.position = posBeforePuzzle;
+                firstFramePuzzleMode = true;
+                focusPoint.eulerAngles = angleBeforePuzzle;
+                focusPoint.position = posBeforePuzzle;
             }
             curAngle += AngleVel;
 
             if (!Input.GetMouseButton(0))
             {
-                AngleVel = Vector2.SmoothDamp(AngleVel, Vector2.zero, ref vel, smoothTime);
+                AngleVel = Vector2.SmoothDamp(AngleVel, Vector2.zero, ref vel2d, smoothTime);
                 moveCamera = false;
             }
             curAngle = new Vector2(Mathf.Clamp(curAngle.x, 10, 70), curAngle.y);
@@ -71,20 +74,26 @@ public class OrbitalCamera : MonoBehaviour
                 Vector2 deltaMouse = Input.mousePositionDelta;
                 AngleVel = new Vector2(-deltaMouse.y, deltaMouse.x) * rotationSpeed;
             }
-            angleBeforePuzzle = focusPointObj.transform.eulerAngles;
-            posBeforePuzzle = focusPointObj.transform.position;
+            angleBeforePuzzle = focusPoint.eulerAngles;
+            posBeforePuzzle = focusPoint.position;
         } else
         {
+            if (firstFramePuzzleMode)
+            {
+                SwooshSFX.Play();
+                firstFramePuzzleMode = false;
+            }
+
             //if in puzzle mode, set camera transform to center of bridge and look down at it
-            Vector3 bridgeCenter = Vector3.zero;
+            Vector3 bridgeCenter;
             foreach (var bridge in FindObjectsByType<ClickToCreateBridge>(FindObjectsSortMode.None))
             {
                 if (bridge.IsInPuzzleMode())
                 {
                     Renderer bridgeRenderer = bridge.GetComponent<Renderer>();
                     bridgeCenter = bridgeRenderer.bounds.center;
-                    focusPointObj.transform.position = bridgeCenter + new Vector3(0, 50, 0);
-                    focusPointObj.transform.eulerAngles = new Vector3(90, 0, 0);
+                    focusPoint.position = Vector3.SmoothDamp(focusPoint.position, bridgeCenter + new Vector3(0, 50, 0), ref vel3d, smoothTime);
+                    focusPoint.eulerAngles = new Vector3(90, focusPoint.eulerAngles.y, 0);
                 }
             }
         }
@@ -113,17 +122,5 @@ public class OrbitalCamera : MonoBehaviour
         }
 
         cam.orthographicSize = Mathf.Clamp(cam.orthographicSize, minZoom, maxZoom);
-    }
-
-    private bool IsAnyBridgeInPuzzleMode()
-    {
-        // Find all ClickToCreateBridge components and check if any are in puzzle mode
-        ClickToCreateBridge[] bridges = FindObjectsByType<ClickToCreateBridge>(FindObjectsSortMode.None);
-        foreach (var bridge in bridges)
-        {
-            if (bridge.IsInPuzzleMode())
-                return true;
-        }
-        return false;
     }
 }

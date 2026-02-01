@@ -105,7 +105,7 @@ public class SplineEditor : MonoBehaviour
             curveLength += Vector3.Magnitude(SamplePointInCurve(i/(resolution * 2)) - SamplePointInCurve((i + 1) / (resolution * 2)));
         }
         float tempLength = 0;
-        float prevLength = 0;
+        float prevLength;
         float targetLength = 1 / ((float)resolution + 1f);
         for (float i = 0; i < resolution * 3; i++)
         {

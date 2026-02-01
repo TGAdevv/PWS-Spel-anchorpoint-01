@@ -53,6 +53,8 @@ public class IslandEditor : MonoBehaviour
     [Range(10, 50)]
     [SerializeField] float UnitSize;
 
+    public int LevelScaleMod;
+
     public Canvas canvas;
     public LevelImporter levelImporter;
     public Slider BuildingBlocksSlider;
@@ -281,9 +283,9 @@ public class IslandEditor : MonoBehaviour
 
         //                              Important for converting to worldspace
         Result_TXT += "_" + Display.main.renderingWidth + "," + Display.main.renderingHeight;
-        Result_TXT += "_" + (uint)BuildingBlocksSlider.value;
         if (BeginIslandDefined && EndIslandDefined)
             Result_TXT += "_}" + BeginIsland + "," + EndIsland;
+        Result_TXT += "_" + (uint)BuildingBlocksSlider.value;
 
         if (copyToClipboard)
         {
@@ -326,7 +328,6 @@ public class IslandEditor : MonoBehaviour
     {
         CultureInfo US = new("en-US");
         Thread.CurrentThread.CurrentCulture = US;
-        //Debug.Log("Importing level: " + _level.text);
 
         // Wipe everything from what's currently being edited
         foreach (ManageIslandConnections island in IslandScripts)
