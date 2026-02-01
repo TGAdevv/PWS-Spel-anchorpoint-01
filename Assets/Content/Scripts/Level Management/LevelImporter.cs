@@ -49,7 +49,7 @@ public class LevelImporter : MonoBehaviour
     public AudioClip destroyBridge;
     public AudioClip bridgeSnap;
 
-    public GameObject LoadScreenUI;
+    public UnityEvent OpenLoadScreen, CloseLoadScreen;
 
     public int currentLevel = 0;
 
@@ -551,7 +551,7 @@ public class LevelImporter : MonoBehaviour
             }
             yield return new WaitForFixedUpdate();
         }
-        LoadScreenUI.SetActive(false);
+        CloseLoadScreen.Invoke();
     }
 
     public void ImportLevel(int levelID, bool previewMode=false)
@@ -562,7 +562,7 @@ public class LevelImporter : MonoBehaviour
         GlobalVariables.m_Level = levelID;
         currentLevel = levelID;
 
-        LoadScreenUI.SetActive(true);
+        OpenLoadScreen.Invoke();
         LevelId = levelID;
         PreviewMode = previewMode;
         StartCoroutine(importLevel());

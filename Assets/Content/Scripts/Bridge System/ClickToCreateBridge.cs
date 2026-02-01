@@ -54,6 +54,9 @@ public class ClickToCreateBridge : MonoBehaviour
     }
     private void OnMouseDown()
     {
+        if (!enabled)
+            return;
+
         if (GlobalVariables.inPuzzleMode && !inPuzzleMode)
             return;
 

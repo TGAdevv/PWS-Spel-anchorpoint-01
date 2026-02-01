@@ -49,7 +49,7 @@ public class ShowLevelFinishedAnimation : MonoBehaviour
 
     Train AnimateTrain(Train train, Vector3 originalTrainScale, bool inverseDir = false)
     {
-        train.t = Mathf.Min(train.t + (Time.deltaTime / train.Duration), 1);
+        train.t = Mathf.Min(train.t + (Time.deltaTime / Mathf.Min(train.Duration, 20)), 1);
 
         float t = inverseDir ? 1 - train.t : train.t;
 
@@ -89,7 +89,7 @@ public class ShowLevelFinishedAnimation : MonoBehaviour
 
                 ClickToCreateBridge ClickToCreate = bridgeOBJ.GetComponent<ClickToCreateBridge>();
                 if (ClickToCreate)
-                    Destroy(ClickToCreate);
+                    ClickToCreate.enabled = false;
             }
 
             for (int i = GlobalVariables.bridgeObjects.Count - 1; i >= 0; i--)
@@ -102,10 +102,7 @@ public class ShowLevelFinishedAnimation : MonoBehaviour
 
                 if (GlobalVariables.possibleBridges.Length - 1 >= i)
                     if (!GlobalVariables.possibleBridges[i].activated)
-                    {
-                        Destroy(GlobalVariables.bridgeObjects[i]);
                         continue;
-                    }
 
                 TrainOBJs.Add(new(
                     Instantiate(TrainPrefab), // Train Prefab
@@ -136,21 +133,25 @@ public class ShowLevelFinishedAnimation : MonoBehaviour
 
                 Destroy(TrainOBJs[i].TrainOBJ);
             }
+            foreach (var bridge in GlobalVariables.bridgeObjects)
+            {
+                ClickToCreateBridge clickToCreateBridge = bridge.GetComponent<ClickToCreateBridge>();
+                if (clickToCreateBridge)
+                    clickToCreateBridge.enabled = true;
+            }
         }
         if (GlobalVariables.m_LevelGoal == LevelGoal.OPTIMIZE_PROCESS)
         {
             List<List<Vector3Int>> Bridges = checkIfLevelFinished.AllRoutes;
             List<Train> TrainOBJs = new(Bridges.Count * 2);
 
-            float animDurationFactor = 5f / GlobalVariables.LongestProcess;
+            float animDurationFactor = 3.5f / GlobalVariables.LongestProcess;
 
             for (int i = 0; i < Bridges.Count; i++)
             {
                 int bridgeIndex = Bridges[i][0].z;
                 uint weight = GlobalVariables.possibleBridges[bridgeIndex].weight;
                 weight = (weight == 0) ? GlobalVariables.SelectedWeightOption : weight;
-
-                print("Made train object");
 
                 TrainOBJs.Add(new(
                     Instantiate(TrainPrefab), // Train OBJ
@@ -163,11 +164,8 @@ public class ShowLevelFinishedAnimation : MonoBehaviour
             }
 
             bool AnimationDone = false;
-            int frame = 0;
             while (!AnimationDone)
             {
-                frame++;
-
                 AnimationDone = true;
                 for (int i = TrainOBJs.Count - 1; i >= 0; i--)
                 {
@@ -207,12 +205,87 @@ public class ShowLevelFinishedAnimation : MonoBehaviour
                 Destroy(TrainOBJs[i].TrainOBJ);
             }
         }
+        if (GlobalVariables.m_LevelGoal == LevelGoal.FIND_SHORTEST_ROUTE)
+        {
+            float animDurationFactor = AnimDuration / GlobalVariables.m_requiredBlocks;
+
+            // x = start island index, y = end island index, z = bridge index
+            List<Vector3Int> ActivatedBridges = new();
+
+            for (int i = 0; i < GlobalVariables.possibleBridges.Length; i++)
+            {
+                if (GlobalVariables.possibleBridges[i].activated)
+                {
+                    Bridge bridge = GlobalVariables.possibleBridges[i];
+                    ActivatedBridges.Add(new(bridge.startIsland, bridge.endIsland, i));
+                }
+            }
+
+            // x = start island index, y = bridge index
+            List<Vector2Int> Route = new(ActivatedBridges.Count);
+
+            int TargetIslandIndex = GlobalVariables.m_startIsland;
+            int activeBridgesCount = ActivatedBridges.Count;
+
+            for (int i = 0; i < activeBridgesCount; i++)
+            {
+                if (TargetIslandIndex == GlobalVariables.m_endIsland)
+                    break;
+
+                for (int j = 0; j < ActivatedBridges.Count; j++)
+                {
+                    if (TargetIslandIndex == ActivatedBridges[j].x)
+                    {
+                        Route.Add(new(TargetIslandIndex, ActivatedBridges[j].z));
+                        TargetIslandIndex = ActivatedBridges[j].y;
+                        ActivatedBridges.RemoveAt(j);
+                        break;
+                    }
+                    if (TargetIslandIndex == ActivatedBridges[j].y)
+                    {
+                        Route.Add(new(TargetIslandIndex, ActivatedBridges[j].z));
+                        TargetIslandIndex = ActivatedBridges[j].x;
+                        ActivatedBridges.RemoveAt(j);
+                        break;
+                    }
+                }
+            }
+
+            Train train = new(
+                    Instantiate(TrainPrefab), // Train OBJ
+                    0, // t-value (0-1)
+                    0, // Route index (always zero for shortest route)
+                    0, // Index in route
+                    GlobalVariables.bridgeObjects[Route[0].y].GetComponent<SplineEditor>(), // Spline script of the bridge
+                    GlobalVariables.possibleBridges[Route[0].y].weight * animDurationFactor // Duration
+            );
+
+            while (true)
+            {
+                if (train.t >= 1)
+                {
+                    if (train.IndexInRoute + 1 >= Route.Count)
+                        break;
+
+                    train.t = 0;
+                    train.IndexInRoute++;
+
+                    int newBridgeIndex = Route[train.IndexInRoute].y;
+
+                    train.Spline = GlobalVariables.bridgeObjects[newBridgeIndex].GetComponent<SplineEditor>();
+                    train.Duration = GlobalVariables.possibleBridges[newBridgeIndex].weight * animDurationFactor;
+                }
+
+                train = AnimateTrain(train, originalTrainScale, Route[train.IndexInRoute].x != GlobalVariables.possibleBridges[Route[train.IndexInRoute].y].startIsland);
+
+                yield return new WaitForEndOfFrame();
+            }
+        }
 
         ShowUI.Invoke();
 
         if (StarCount == -1)
         {
-            print("Play on level not finished");
             checkIfLevelFinished.OnLevelNotFinished.Invoke();
             yield break;
         }

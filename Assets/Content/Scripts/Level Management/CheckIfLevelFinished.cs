@@ -161,23 +161,6 @@ public class CheckIfLevelFinished : MonoBehaviour
         //           Cur island                     Prev island  tot_weight  has_x   route  1st_search
         WeightedDFS(GlobalVariables.m_startIsland,      -1,          0,      false,  null,   true);
 
-        string output = "";
-        int index = 0;
-
-        foreach (var route in AllRoutes)
-        {
-            foreach (var bridge in route)
-            {
-                output += (index == 0) ? "" : "; ";
-                output += bridge.ToString();
-                output += ",weight:" + GlobalVariables.possibleBridges[bridge.z].weight;
-                index++;
-            }
-            output += "\n";
-        }
-
-        print(output);
-
         GlobalVariables.LongestProcess = MaximumWeight;
 
         if (GlobalVariables.SelectedWeightOption > MaximumWeight - XTotalProcessWeight)

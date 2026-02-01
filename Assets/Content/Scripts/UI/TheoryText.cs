@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -22,13 +24,32 @@ public class TheoryText : MonoBehaviour
 
     [SerializeField] UnityEvent OnNewChapter;
 
+    public float ShowNewChapterDelay;
+    MonoBehaviour camMono;
+
+    HashSet<int> ChaptersAlreadySeen;
+
+    IEnumerator ShowNewChapter()
+    {
+        yield return new WaitForSeconds(ShowNewChapterDelay);
+        OnNewChapter.Invoke();
+    }
+
     public void Tick()
     {
+        if (!camMono)
+            camMono = Camera.main.GetComponent<MonoBehaviour>();
+
+        if (ChaptersAlreadySeen == null)
+            ChaptersAlreadySeen = new(Chapters.Length);
+
         for (int i = 0; i < Chapters.Length; i++)
         {
-            print(i);
-            if (GlobalVariables.m_Level == Chapters[i].SetAtLevel)
-                OnNewChapter.Invoke();
+            if (GlobalVariables.m_Level == Chapters[i].SetAtLevel && !ChaptersAlreadySeen.Contains(i))
+            {
+                ChaptersAlreadySeen.Add(i);
+                camMono.StartCoroutine(ShowNewChapter());
+            }
             if (i == Chapters.Length - 1)
             {
                 Title.text = Chapters[i].Title;
