@@ -139,7 +139,13 @@ public class LevelImporter : MonoBehaviour
             return;
         }
 
-        ImportLevel(currentLevel + 1);
+        currentLevel++;
+        while (levelBarManager.LevelStatusses[currentLevel] == LevelBarManager.LevelStatus.Completed)
+        {
+            currentLevel++;
+        }
+
+        ImportLevel(currentLevel);
     }
 
     GameObject InstantiateIsland(GameObject island, int i, int j, Vector2Int size, float unitSize)
