@@ -82,8 +82,9 @@ public class LevelBarManager : MonoBehaviour
             TMP_Text txt = LevelButtonImages[i].GetComponentInChildren<TMP_Text>();
 
             LevelButtonImages[i].color = colors[(int)lvlStatus];
-            txt.fontSize = (lvlStatus == LevelStatus.In_Progress) ? 40 : 30;
-            txt.color = (lvlStatus == LevelStatus.Locked) ? Color.gray : Color.white;
+            LevelButtonImages[i].rectTransform.sizeDelta = Vector2.one * ((lvlStatus == LevelStatus.In_Progress) ? 40 : 30);
+            txt.fontSize = (lvlStatus == LevelStatus.In_Progress) ? 40 : 17;
+            txt.text     = (lvlStatus == LevelStatus.Locked) ? "" : (i + 1).ToString();
         }
     }
 }

@@ -13,6 +13,7 @@ public class CheckIfLevelFinished : MonoBehaviour
 
     [NonSerialized] public int currentLvlRoutes = 0;
 
+    public List<Vector2Int>[] bridges;
     public List<List<Vector3Int>> AllRoutes;
 
     public bool Check()
@@ -86,7 +87,7 @@ public class CheckIfLevelFinished : MonoBehaviour
         uint MaximumWeight = 0;
 
         // x = index of island it goes to, y = index of the bridge in possibleBridges array
-        List<Vector2Int>[] bridges = new List<Vector2Int>[GlobalVariables.m_totalIslands];
+        bridges = new List<Vector2Int>[GlobalVariables.m_totalIslands];
 
         for (int i = 0; i < GlobalVariables.possibleBridges.Length; i++)
         {
@@ -144,7 +145,7 @@ public class CheckIfLevelFinished : MonoBehaviour
                 List<Vector3Int> newRoute;
 
                 if (Route != null)
-                    newRoute = Route;
+                    newRoute = new(Route);
                 else
                     newRoute = new();
 
@@ -159,6 +160,25 @@ public class CheckIfLevelFinished : MonoBehaviour
 
         //           Cur island                     Prev island  tot_weight  has_x   route  1st_search
         WeightedDFS(GlobalVariables.m_startIsland,      -1,          0,      false,  null,   true);
+
+        string output = "";
+        int index = 0;
+
+        foreach (var route in AllRoutes)
+        {
+            foreach (var bridge in route)
+            {
+                output += (index == 0) ? "" : "; ";
+                output += bridge.ToString();
+                output += ",weight:" + GlobalVariables.possibleBridges[bridge.z].weight;
+                index++;
+            }
+            output += "\n";
+        }
+
+        print(output);
+
+        GlobalVariables.LongestProcess = MaximumWeight;
 
         if (GlobalVariables.SelectedWeightOption > MaximumWeight - XTotalProcessWeight)
             return false;
@@ -184,7 +204,15 @@ public class CheckIfLevelFinished : MonoBehaviour
 
         if (!Check())
         {
-            OnLevelNotFinished.Invoke();
+            if (GlobalVariables.m_LevelGoal != LevelGoal.OPTIMIZE_PROCESS)
+            {
+                OnLevelNotFinished.Invoke();
+                return;
+            }
+
+            // Play animation and show level not finished afterwards
+            // (-1 signals that the level is not finished)
+            StartCoroutine(ShowLevelFinishedAnimation.LevelFinished(-1));
             return;
         }
 

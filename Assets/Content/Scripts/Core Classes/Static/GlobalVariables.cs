@@ -90,6 +90,7 @@ public static class GlobalVariables
     public static int m_multiplechoiceconnection = -1;
     public static uint neededweight = 0;
     public static uint SelectedWeightOption = 0;
+    public static uint LongestProcess;
 
     // Click to create bridge
     public static bool inPuzzleMode = false;
