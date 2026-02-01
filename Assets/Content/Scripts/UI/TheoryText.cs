@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Events;
 
 public class TheoryText : MonoBehaviour
 {
@@ -15,28 +16,31 @@ public class TheoryText : MonoBehaviour
     }
 
     [SerializeField] Chapter[] Chapters;
-    int currentChapter = -1;
 
     [SerializeField] TMPro.TMP_Text Title;
     [SerializeField] TMPro.TMP_Text ChapterContent;
 
-    [Header("Optional - Leave NULL if not wanted")]
-    [SerializeField] GameObject NotifcationOBJ;
+    [SerializeField] UnityEvent OnNewChapter;
 
     public void Tick()
     {
-        if (Chapters.Length <= currentChapter + 1)
-            return;
-
-        if (Chapters[currentChapter + 1].SetAtLevel == GlobalVariables.m_Level)
+        for (int i = 0; i < Chapters.Length; i++)
         {
-            currentChapter++;
-
-            Title.text          = Chapters[currentChapter].Title;
-            ChapterContent.text = Chapters[currentChapter].ChapterContent;
-
-            if (NotifcationOBJ)
-                NotifcationOBJ.SetActive(true);
+            print(i);
+            if (GlobalVariables.m_Level == Chapters[i].SetAtLevel)
+                OnNewChapter.Invoke();
+            if (i == Chapters.Length - 1)
+            {
+                Title.text = Chapters[i].Title;
+                ChapterContent.text = Chapters[i].ChapterContent;
+                return;
+            }
+            if (GlobalVariables.m_Level >= Chapters[i].SetAtLevel && GlobalVariables.m_Level < Chapters[i + 1].SetAtLevel)
+            {
+                Title.text = Chapters[i].Title;
+                ChapterContent.text = Chapters[i].ChapterContent;
+                return;
+            }
         }
     }
 }
