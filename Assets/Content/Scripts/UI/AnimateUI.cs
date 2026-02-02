@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 enum Property
@@ -25,6 +26,7 @@ public class AnimateUI : MonoBehaviour
 {
 
     [SerializeField] Animation[] animations;
+    [SerializeField] UnityEvent OnAnimationFinished;
 
     RectTransform rect;
 
@@ -72,10 +74,12 @@ public class AnimateUI : MonoBehaviour
     {
         if (Timer <= Duration && Timer != -1) 
             AnimationTick();
-        if (Timer > Duration && animations[currentID].DeactivateAfter) 
+        if (Timer > Duration) 
         {
             AnimationTick();
-            animations[currentID].DeactivateAfter.SetActive(false);
+            OnAnimationFinished.Invoke();
+            if (animations[currentID].DeactivateAfter)
+                animations[currentID].DeactivateAfter.SetActive(false);
             Timer = -1;
         }
 

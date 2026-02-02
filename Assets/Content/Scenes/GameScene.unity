@@ -2013,6 +2013,9 @@ MonoBehaviour:
       m_RotationOrder: 4
     duration: 0.5
     DeactivateAfter: {fileID: 544865925}
+  OnAnimationFinished:
+    m_PersistentCalls:
+      m_Calls: []
   Timer: 0
 --- !u!1 &201139591
 GameObject:
@@ -2276,6 +2279,9 @@ MonoBehaviour:
       m_RotationOrder: 4
     duration: 0.5
     DeactivateAfter: {fileID: 352539889}
+  OnAnimationFinished:
+    m_PersistentCalls:
+      m_Calls: []
   Timer: 0
 --- !u!114 &211906353
 MonoBehaviour:
@@ -3102,6 +3108,9 @@ MonoBehaviour:
       m_RotationOrder: 4
     duration: 0.3
     DeactivateAfter: {fileID: 0}
+  OnAnimationFinished:
+    m_PersistentCalls:
+      m_Calls: []
   Timer: 0
 --- !u!114 &279864384
 MonoBehaviour:
@@ -4122,6 +4131,9 @@ MonoBehaviour:
       m_RotationOrder: 4
     duration: 0.3
     DeactivateAfter: {fileID: 0}
+  OnAnimationFinished:
+    m_PersistentCalls:
+      m_Calls: []
   Timer: 0
 --- !u!114 &352539892
 MonoBehaviour:
@@ -4743,6 +4755,9 @@ MonoBehaviour:
       m_RotationOrder: 4
     duration: 0.4
     DeactivateAfter: {fileID: 0}
+  OnAnimationFinished:
+    m_PersistentCalls:
+      m_Calls: []
   Timer: 0
 --- !u!1 &414946681
 GameObject:
@@ -5688,6 +5703,9 @@ MonoBehaviour:
       m_RotationOrder: 4
     duration: 0.3
     DeactivateAfter: {fileID: 0}
+  OnAnimationFinished:
+    m_PersistentCalls:
+      m_Calls: []
   Timer: 0
 --- !u!114 &544865928
 MonoBehaviour:
@@ -5983,6 +6001,9 @@ MonoBehaviour:
       m_RotationOrder: 4
     duration: 0.5
     DeactivateAfter: {fileID: 0}
+  OnAnimationFinished:
+    m_PersistentCalls:
+      m_Calls: []
   Timer: 7.7770576
 --- !u!114 &594974642
 MonoBehaviour:
@@ -6574,6 +6595,9 @@ MonoBehaviour:
       m_RotationOrder: 4
     duration: 0.9
     DeactivateAfter: {fileID: 0}
+  OnAnimationFinished:
+    m_PersistentCalls:
+      m_Calls: []
   Timer: 0
 --- !u!1 &699693040
 GameObject:
@@ -6739,6 +6763,9 @@ MonoBehaviour:
       m_RotationOrder: 4
     duration: 0.5
     DeactivateAfter: {fileID: 279864378}
+  OnAnimationFinished:
+    m_PersistentCalls:
+      m_Calls: []
   Timer: 0
 --- !u!114 &699693045
 MonoBehaviour:
@@ -6871,6 +6898,42 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
+      - m_Target: {fileID: 108762041}
+        m_TargetAssemblyTypeName: UnityEngine.UI.ScrollRect, UnityEngine.UI
+        m_MethodName: set_scrollSensitivity
+        m_Mode: 4
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1117507810}
+        m_TargetAssemblyTypeName: UnityEngine.UI.Scrollbar, UnityEngine.UI
+        m_MethodName: set_interactable
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 1
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1117507810}
+        m_TargetAssemblyTypeName: UnityEngine.UI.Scrollbar, UnityEngine.UI
+        m_MethodName: set_value
+        m_Mode: 4
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 1
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
       - m_Target: {fileID: 279864383}
         m_TargetAssemblyTypeName: AnimateUI, Assembly-CSharp
         m_MethodName: PlayAnimation
@@ -6904,6 +6967,18 @@ MonoBehaviour:
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1117507810}
+        m_TargetAssemblyTypeName: UnityEngine.UI.Scrollbar, UnityEngine.UI
+        m_MethodName: set_value
+        m_Mode: 4
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 1
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
@@ -7129,6 +7204,9 @@ MonoBehaviour:
       m_RotationOrder: 4
     duration: 0.3
     DeactivateAfter: {fileID: 0}
+  OnAnimationFinished:
+    m_PersistentCalls:
+      m_Calls: []
   Timer: 0
 --- !u!114 &740440852
 MonoBehaviour:
@@ -7706,6 +7784,9 @@ MonoBehaviour:
       m_RotationOrder: 4
     duration: 0.5
     DeactivateAfter: {fileID: 1520134394}
+  OnAnimationFinished:
+    m_PersistentCalls:
+      m_Calls: []
   Timer: 0
 --- !u!114 &832687699
 MonoBehaviour:
@@ -11202,6 +11283,9 @@ MonoBehaviour:
       m_RotationOrder: 4
     duration: 0.5
     DeactivateAfter: {fileID: 1158615374}
+  OnAnimationFinished:
+    m_PersistentCalls:
+      m_Calls: []
   Timer: 0
 --- !u!114 &1000374286
 MonoBehaviour:
@@ -11703,6 +11787,9 @@ MonoBehaviour:
       m_RotationOrder: 4
     duration: 0.8
     DeactivateAfter: {fileID: 0}
+  OnAnimationFinished:
+    m_PersistentCalls:
+      m_Calls: []
   Timer: 0
 --- !u!1 &1050914000
 GameObject:
@@ -12299,7 +12386,7 @@ MonoBehaviour:
     m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
     m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
     m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_DisabledColor: {r: 1, g: 1, b: 1, a: 1}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
   m_SpriteState:
@@ -12317,8 +12404,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2010185293}
   m_HandleRect: {fileID: 2010185292}
   m_Direction: 2
-  m_Value: 0.99999994
-  m_Size: 0.30574125
+  m_Value: 0.0000009230994
+  m_Size: 0.30573612
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -12468,6 +12555,9 @@ MonoBehaviour:
       m_RotationOrder: 4
     duration: 0.3
     DeactivateAfter: {fileID: 0}
+  OnAnimationFinished:
+    m_PersistentCalls:
+      m_Calls: []
   Timer: 0
 --- !u!114 &1158615377
 MonoBehaviour:
@@ -12803,6 +12893,9 @@ MonoBehaviour:
       m_RotationOrder: 4
     duration: 0.5
     DeactivateAfter: {fileID: 0}
+  OnAnimationFinished:
+    m_PersistentCalls:
+      m_Calls: []
   Timer: 0
 --- !u!114 &1167417597
 MonoBehaviour:
@@ -13170,6 +13263,9 @@ MonoBehaviour:
       m_RotationOrder: 4
     duration: 0.5
     DeactivateAfter: {fileID: 2060351061}
+  OnAnimationFinished:
+    m_PersistentCalls:
+      m_Calls: []
   Timer: 0
 --- !u!1 &1207968351
 GameObject:
@@ -15216,6 +15312,9 @@ MonoBehaviour:
       m_RotationOrder: 4
     duration: 0.5
     DeactivateAfter: {fileID: 740440847}
+  OnAnimationFinished:
+    m_PersistentCalls:
+      m_Calls: []
   Timer: 0
 --- !u!1 &1491683679
 GameObject:
@@ -15809,6 +15908,9 @@ MonoBehaviour:
       m_RotationOrder: 4
     duration: 0.3
     DeactivateAfter: {fileID: 0}
+  OnAnimationFinished:
+    m_PersistentCalls:
+      m_Calls: []
   Timer: 0
 --- !u!114 &1520134398
 MonoBehaviour:
@@ -16316,6 +16418,9 @@ MonoBehaviour:
       m_RotationOrder: 4
     duration: 0.4
     DeactivateAfter: {fileID: 0}
+  OnAnimationFinished:
+    m_PersistentCalls:
+      m_Calls: []
   Timer: 0
 --- !u!1 &1571679573
 GameObject:
@@ -17094,6 +17199,9 @@ MonoBehaviour:
       m_RotationOrder: 4
     duration: 0.4
     DeactivateAfter: {fileID: 0}
+  OnAnimationFinished:
+    m_PersistentCalls:
+      m_Calls: []
   Timer: 0
 --- !u!1 &1647367244
 GameObject:
@@ -17128,7 +17236,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.0006585351, y: 0.000030517578}
+  m_AnchoredPosition: {x: -0.002698977, y: 694.259}
   m_SizeDelta: {x: 0, y: 1000}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &1648776843
@@ -18145,6 +18253,9 @@ MonoBehaviour:
       m_RotationOrder: 4
     duration: 0.9
     DeactivateAfter: {fileID: 0}
+  OnAnimationFinished:
+    m_PersistentCalls:
+      m_Calls: []
   Timer: 0
 --- !u!1 &1893862496
 GameObject:
@@ -18613,7 +18724,7 @@ RectTransform:
   m_GameObject: {fileID: 1942707784}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.01, y: 0.01, z: 0.01}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 1336312568}
@@ -18713,6 +18824,57 @@ MonoBehaviour:
       m_RotationOrder: 4
     duration: 0.5
     DeactivateAfter: {fileID: 279864378}
+  OnAnimationFinished:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1117507810}
+        m_TargetAssemblyTypeName: UnityEngine.UI.Scrollbar, UnityEngine.UI
+        m_MethodName: set_interactable
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
+      - m_Target: {fileID: 108762041}
+        m_TargetAssemblyTypeName: UnityEngine.UI.ScrollRect, UnityEngine.UI
+        m_MethodName: set_enabled
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 1
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
+      - m_Target: {fileID: 108762041}
+        m_TargetAssemblyTypeName: UnityEngine.UI.ScrollRect, UnityEngine.UI
+        m_MethodName: set_scrollSensitivity
+        m_Mode: 4
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 1
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
+      - m_Target: {fileID: 1117507810}
+        m_TargetAssemblyTypeName: UnityEngine.UI.Scrollbar, UnityEngine.UI
+        m_MethodName: set_value
+        m_Mode: 4
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 1
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
   Timer: 0
 --- !u!1 &1963756247
 GameObject:
