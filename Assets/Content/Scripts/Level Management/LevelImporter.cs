@@ -60,6 +60,9 @@ public class LevelImporter : MonoBehaviour
     public UnityEvent OnImported;
     public CheckIfLevelFinished LevelFinishedChecker;
 
+    public GameObject PuzzleModeCanvas;
+    public Button CancelButton;
+
     [Header("FOR EDITOR LEAVE NULL IN GAME SCENE")]
     public GameObject axisPrefab;
 
@@ -245,6 +248,8 @@ public class LevelImporter : MonoBehaviour
             clickToCreateBridge.endIsland = index.y;
             clickToCreateBridge.ShowAllUI = ShowAllUI;
             clickToCreateBridge.HideAllUI = HideAllUI;
+            clickToCreateBridge.PuzzleModeCanvas = PuzzleModeCanvas;
+            clickToCreateBridge.CancelButton     = CancelButton;
 
             AudioSource BuildSFX = newBridge.AddComponent<AudioSource>();
             BuildSFX.volume = .5f;

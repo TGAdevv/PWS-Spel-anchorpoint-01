@@ -35,6 +35,9 @@ public class ClickToCreateBridge : MonoBehaviour
     private float raiseHeight = 3f;
     private Vector3 segmentStartPos = Vector3.zero;
 
+    public GameObject PuzzleModeCanvas;
+    public Button CancelButton;
+
     void Start()
     {
         spline = GetComponent<SplineEditor>();
@@ -112,6 +115,10 @@ public class ClickToCreateBridge : MonoBehaviour
             return;
         HideAllUI.Invoke();
 
+        PuzzleModeCanvas.SetActive(true);
+        CancelButton.onClick.RemoveAllListeners();
+        CancelButton.onClick.AddListener(delegate { CancelPuzzleMode(); });
+
         GlobalVariables.inPuzzleMode = true;
         inPuzzleMode = true;
         snappedSegments.Clear();
@@ -163,9 +170,31 @@ public class ClickToCreateBridge : MonoBehaviour
         }
     }
 
+    void CancelPuzzleMode()
+    {
+        ShowAllUI.Invoke();
+
+        PuzzleModeCanvas.SetActive(false);
+
+        GlobalVariables.inPuzzleMode = false;
+        inPuzzleMode = false;
+        currentlyDraggingSegment = null;
+        // Hide segment bridges and disable their colliders
+        foreach (var segment in segmentBridges)
+        {
+            if (segment != null)
+                segment.SetActive(false);
+        }
+
+        // Ensure parent bridge is fully visible
+        gameObject.SetActive(true);
+    }
+
     private void ExitPuzzleMode()
     {
         ShowAllUI.Invoke();
+
+        PuzzleModeCanvas.SetActive(false);
 
         GlobalVariables.inPuzzleMode = false;
         inPuzzleMode = false;
