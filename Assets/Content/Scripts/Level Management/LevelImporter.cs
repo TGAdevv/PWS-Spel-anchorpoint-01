@@ -50,6 +50,7 @@ public class LevelImporter : MonoBehaviour
     public AudioClip bridgeSnap;
 
     public UnityEvent OpenLoadScreen, CloseLoadScreen;
+    public UnityEvent ShowAllLevelsCompleteScreen;
 
     public int currentLevel = 0;
 
@@ -562,7 +563,10 @@ public class LevelImporter : MonoBehaviour
     public void ImportLevel(int levelID, bool previewMode=false)
     {
         if (levelID >= levels.Length)
-            levelID = levels.Length - 1;
+        {
+            ShowAllLevelsCompleteScreen.Invoke();
+            return;
+        }
 
         GlobalVariables.m_Level = levelID;
         currentLevel = levelID;
@@ -574,6 +578,26 @@ public class LevelImporter : MonoBehaviour
 
         OnImported.Invoke();
     }
+    public void ImportLevelThroughEvent(int levelID)
+    {
+        if (levelID >= levels.Length)
+        {
+            ShowAllLevelsCompleteScreen.Invoke();
+            return;
+        }
+
+        GlobalVariables.m_Level = levelID;
+        currentLevel = levelID;
+
+        OpenLoadScreen.Invoke();
+        LevelId = levelID;
+        StartCoroutine(importLevel());
+
+        OnImported.Invoke();
+    }
+
+    public void SetCoinAmount(int value) => GlobalVariables.m_Coins = (uint)value;
+    public void ChangeCoinAmount(int amount) => GlobalVariables.m_Coins = (uint)((int)GlobalVariables.m_Coins + amount);
 
     public void ReloadCurrentLevel()
     {

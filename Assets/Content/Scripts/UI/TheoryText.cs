@@ -35,6 +35,10 @@ public class TheoryText : MonoBehaviour
         OnNewChapter.Invoke();
     }
 
+    public void FlushChaptersAlreadySeen()
+    {
+        ChaptersAlreadySeen.Clear();
+    }
     public void Tick()
     {
         if (!camMono)

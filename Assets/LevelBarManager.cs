@@ -51,30 +51,8 @@ public class LevelBarManager : MonoBehaviour
         }
     }
 
-    public void LevelCompleted(int StarCount)
+    void RefreshUI(int LevelOffset)
     {
-        LevelStatusses[GlobalVariables.m_Level] = (StarCount == 3) ? LevelStatus.Completed : LevelStatus.Incomplete;
-    }
-    public void OnLevelImport()
-    {
-        LevelStatusses[GlobalVariables.m_Level] = LevelStatus.In_Progress;
-        int LevelOffset = Mathf.FloorToInt(GlobalVariables.m_Level / 6) * 6;
-
-        if (!setupComplete)
-        {
-            colors = new Color[4] { Locked, In_progress, Incomplete, Completed };
-            levelImporter.levelBarManager = this;
-
-            for (int i = 0; i < LevelStatusses.Length; i++)
-            {
-                LevelStatusses[i] = LevelStatus.Locked;
-            }
-            LevelStatusses[GlobalVariables.m_Level - LevelOffset] = LevelStatus.In_Progress;
-
-            setupComplete = true;
-        }
-
-        // Refresh UI
         for (int i = 0; i < 6; i++)
         {
             int Level = LevelOffset + i;
@@ -84,7 +62,38 @@ public class LevelBarManager : MonoBehaviour
             LevelButtonImages[i].color = colors[(int)lvlStatus];
             LevelButtonImages[i].rectTransform.sizeDelta = Vector2.one * ((lvlStatus == LevelStatus.In_Progress) ? 40 : 30);
             txt.fontSize = (lvlStatus == LevelStatus.In_Progress) ? 40 : 17;
-            txt.text     = (lvlStatus == LevelStatus.Locked) ? "" : (i + 1).ToString();
+            txt.text = (lvlStatus == LevelStatus.Locked) ? "" : (i + 1).ToString();
+        }
+    }
+
+    public void ResetBar()
+    {
+        for (int i = 0; i < LevelStatusses.Length; i++)
+        {
+            LevelStatusses[i] = LevelStatus.Locked;
+        }
+        LevelStatusses[GlobalVariables.m_Level] = LevelStatus.In_Progress;
+        RefreshUI(Mathf.FloorToInt(GlobalVariables.m_Level / 6) * 6);
+    }
+    public void LevelCompleted(int StarCount)
+    {
+        LevelStatusses[GlobalVariables.m_Level] = (StarCount == 3) ? LevelStatus.Completed : LevelStatus.Incomplete;
+    }
+    public void OnLevelImport()
+    {
+        LevelStatusses[GlobalVariables.m_Level] = LevelStatus.In_Progress;
+        int LevelOffset = Mathf.FloorToInt(GlobalVariables.m_Level / 6) * 6;
+
+        if (setupComplete)
+            RefreshUI(LevelOffset);
+        else
+        {
+            colors = new Color[4] { Locked, In_progress, Incomplete, Completed };
+            levelImporter.levelBarManager = this;
+
+            ResetBar();
+
+            setupComplete = true;
         }
     }
 }
